@@ -1,7 +1,92 @@
+#include <vector>
+#include <sstream>
+#include <string>
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <unordered_map>
+
+// server response (8===============>)
+
+
+class Request
+{
+	public:
+		std::vector<std::string> firstLine;
+		std::string method;
+};
+class Response
+{
+	public:
+		class Header
+		{
+			public:
+			std::string firstLine; 
+			std::unordered_map<unsigned int, std::string> status =
+			{
+				{200, "Success"},
+				{300, "Redirection"},
+				{400, "Client Error"},
+				{500, "Server error"}
+			};
+			std::string contentLength;
+			std::string contentType;
+		};
+		
+		std::string body;
+};
+
+bool methodCheck(std::string &method, Request& request)
+{
+	if (method != "POST" && method != "GET" && method != "DELETE")
+	{
+		std::cout << "wrong method\n";
+		return false;
+	}
+	request.method = method;
+	return true;
+}
+
+// POST / http1
+
+// <d><word><d><word>
+
+std::vector<std::string> split(const std::string& content, const std::string& delimeter)
+{
+	std::vector<std::string> res;
+	std::istringstream input(content);
+	std::string line;
+	size_t prevDelimiter= 0;
+	
+	std::vector<size_t> delimetersPos;
+	int start = 0;
+	
+	size_t pos = 0;	
+	while (pos != std::string::npos)
+	{
+		pos = line.find(delimeter, start);
+		delimetersPos.push_back(pos);
+		start += pos;
+	}
+	/*
+	while (std::getline(input, line))
+	{
+		res.push_back(line.substr(prevDelimiter), line.find(delimiter));
+		delimiterPos = line.find(delimiter);
+	}
+	*/
+	
+	for (auto it = delimetersPos.begin(); it != delimetersPos.end(); it++)
+	{
+		std::cout << *it << " ";
+	}
+
+	std::cout << std::endl;
+
+	return res;
+
+}
 
 
 int main(int argc, char *argv[])
@@ -12,7 +97,8 @@ int main(int argc, char *argv[])
 
 		return 1;
 	}
-	int sock_fd = socket(PF_INET, SOCK_STREAM, 0);
+			     // ipv4 | 
+	int sock_fd = socket(PF_INET, SOCK_STREAM, 0); // create socket 
 
 	if (sock_fd == -1)
 	{
@@ -31,7 +117,6 @@ int main(int argc, char *argv[])
 
 	std::cout << "sock_fd: " << sock_fd << std::endl;
 	std::cout << "requested Port: " << port << std::endl;
-
 
      // int bind(int socket, const struct sockaddr *address, socklen_t address_len);
 
@@ -65,9 +150,13 @@ int main(int argc, char *argv[])
 			close(sock_fd);
 			return 1;
 		}
-		char buffer[1024];
+		char buffer[1024]; // client request:   GET / HTTP/1.1
+//							Host: localhost:8081
+//	      						User-Agent: curl/7.81.0
+//	      						Accept: */*
+
 		ssize_t bytes_read;
-		bytes_read = read(clientFd, buffer, sizeof(buffer) - 1);
+		bytes_read = read(clientFd, buffer, sizeof(buffer) - 1); // read request 
 		if (bytes_read == -1)
 		{
 			std::cerr << "Read error\n";
@@ -86,10 +175,31 @@ int main(int argc, char *argv[])
 			std::cout << "Request:\n" << buffer << std::endl;
 		}
 
+		Request request;
+		// check request buffer
+		std::string line;
+		std::istringstream strBuffer(buffer);
+		std::getline(strBuffer, line);
+
+		std::cout << "line: " << line << std::endl;
+
+		//std::vector<std::string> request.firstLine;
+		request.firstLine = split(line, " ");
+		for (auto it = request.firstLine.begin(); it != request.firstLine.end(); it++)
+		{
+			std::cout << "word: " << *it << std::endl;
+		}
+
+
 		std::cout << "request has been read successfully \n";
 
+		Response response;
+		//Response::Header responseHeader;
+		//responseHeader.firstLine = "HTTP/1.1" + responseHeader[200];
+		//responseHeader.status = getStatus();
 		std::string firstLine = "HTTP/1.1 200 OK\r\n";
 		//std::string body = "/Users/regilliot/Code/forty-two/webservgit/cockpic.png";
+
 		std::string body = "8==============================>\r\n";
 		std::string emptyLine = "\r\n"; 
 		//std::string contentDisp = "Content-Disposition: inline; filename='./cockpic.png'\r\n";
