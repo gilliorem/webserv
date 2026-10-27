@@ -1,3 +1,4 @@
+#include <fstream>
 #include <vector>
 #include <sstream>
 #include <string>
@@ -15,36 +16,55 @@ class Request
 	public:
 		std::vector<std::string> firstLine;
 		std::string method;
+		std::string path;
+		std::string version;
 };
+
 class Response
 {
 	public:
 		class Header
 		{
 			public:
-			std::string firstLine; 
-			std::unordered_map<unsigned int, std::string> status =
-			{
-				{200, "Success"},
-				{300, "Redirection"},
-				{400, "Client Error"},
-				{500, "Server error"}
-			};
-			std::string contentLength;
-			std::string contentType;
+				std::string firstLine; 
+				std::unordered_map<unsigned int, std::string> status =
+				{
+					{200, "Success"},
+					{300, "Redirection"},
+					{400, "Client Error"},
+					{500, "Server error"}
+				};
+				std::string contentLength;
+				std::string contentType;
 		};
 		
 		std::string body;
 };
 
-bool methodCheck(std::string &method, Request& request)
+bool checkMethod(std::string& method)
 {
 	if (method != "POST" && method != "GET" && method != "DELETE")
 	{
 		std::cout << "wrong method\n";
 		return false;
 	}
-	request.method = method;
+	return true;
+}
+
+bool checkPath(std::string& path)
+{
+	if (path.length() == 0)
+	{
+		std::cout << "wrong path\n";
+		return false;
+	}
+	return true;
+}
+
+bool checkVersion(const std::string& version)
+{
+	if (version != "HTTP/1.1")
+		return false;
 	return true;
 }
 
@@ -52,42 +72,64 @@ bool methodCheck(std::string &method, Request& request)
 
 // <d><word><d><word>
 
+// find
+// substr
+
 std::vector<std::string> split(const std::string& content, const std::string& delimeter)
 {
 	std::vector<std::string> res;
-	std::istringstream input(content);
-	std::string line;
-	size_t prevDelimiter= 0;
 	
-	std::vector<size_t> delimetersPos;
-	int start = 0;
-	
-	size_t pos = 0;	
-	while (pos != std::string::npos)
+	size_t start = 0;
+	size_t found = 0;	
+	while (true)
 	{
-		pos = line.find(delimeter, start);
-		delimetersPos.push_back(pos);
-		start += pos;
+		found = content.find(delimeter, start);
+		if (found == std::string::npos)
+		{
+			std::cout << "final start: " << start << std::endl;
+			res.push_back(content.substr(start));
+			break;
+		}
+		res.push_back(content.substr(start, found - start));
+		std::cout << "start: " << start << std::endl; 
+		std::cout << "found: " << found << std::endl; 
+		start = found + 1;
 	}
-	/*
-	while (std::getline(input, line))
-	{
-		res.push_back(line.substr(prevDelimiter), line.find(delimiter));
-		delimiterPos = line.find(delimiter);
-	}
-	*/
-	
-	for (auto it = delimetersPos.begin(); it != delimetersPos.end(); it++)
-	{
-		std::cout << *it << " ";
-	}
-
-	std::cout << std::endl;
-
 	return res;
-
 }
 
+bool checkFile(std::string& hostPath)
+{
+
+	std::ifstream in_file(hostPath);
+	if (!in_file)
+	{
+		std::cout << "Error opening file " << hostPath << std::endl;
+		return false;
+	}
+	return true;
+}
+
+/*
+ std::unordered_map<unsigned int, std::string> status =
+ {
+ {200, "Success"},
+ {300, "Redirection"},
+ {400, "Client Error"},
+ {500, "Server error"}
+ };
+ */
+
+bool getStatus(Request req, Response& res)
+{
+	
+	// if the <host> is incorrect: 404 
+	if (!checkFile(req.path))
+	{
+		std::cout << res.Header::status[2][0] << ": " << res.Header::status[2][1] << std::endl;
+	}
+	return true;
+}
 
 int main(int argc, char *argv[])
 {
@@ -184,12 +226,17 @@ int main(int argc, char *argv[])
 		std::cout << "line: " << line << std::endl;
 
 		//std::vector<std::string> request.firstLine;
+		std::cout << "line len: " << line.length() << std::endl;
 		request.firstLine = split(line, " ");
-		for (auto it = request.firstLine.begin(); it != request.firstLine.end(); it++)
-		{
-			std::cout << "word: " << *it << std::endl;
-		}
-
+		if (!checkMethod(request.firstLine[0]))
+			return 1;
+		request.method = request.firstLine[0];
+		if (!checkPath(request.firstLine[1]))
+			return 1;
+		request.path = request.firstLine[1];
+		if (!checkVersion(request.firstLine[2]))
+			return 1;
+		request.version = request.firstLine[2];
 
 		std::cout << "request has been read successfully \n";
 
