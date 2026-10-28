@@ -1,3 +1,6 @@
+#include <filesystem>
+#include <sys/types.h>
+#include <sys/uio.h>
 #include <fstream>
 #include <vector>
 #include <sstream>
@@ -41,7 +44,7 @@ class Response
 		std::string body;
 };
 
-bool checkMethod(std::string& method)
+bool checkMethod(const std::string& method)
 {
 	if (method != "POST" && method != "GET" && method != "DELETE")
 	{
@@ -51,20 +54,36 @@ bool checkMethod(std::string& method)
 	return true;
 }
 
-bool checkPath(std::string& path)
+bool checkPath(const std::string& path, const std::string& root)
 {
-	if (path.length() == 0)
+	
+	if (path.length() == 0 || path.length() > 1024)
 	{
 		std::cout << "wrong path\n";
 		return false;
 	}
+
+	std::string globalPath = root + path;
+
+	if (!std::filesystem::exists(globalPath))
+	{
+		std::cout << "File " << globalPath << " doesnt exist\n";
+		return false;
+	}
+
 	return true;
 }
+
+// handle directory case - huge file - filepath contain '..' (shouldnt be able to go back)
 
 bool checkVersion(const std::string& version)
 {
 	if (version != "HTTP/1.1")
+	{
+		std::cout << "wrong http version\n";
+		std::cout << version << std::endl;
 		return false;
+	}
 	return true;
 }
 
@@ -126,7 +145,7 @@ bool getStatus(Request req, Response& res)
 	// if the <host> is incorrect: 404 
 	if (!checkFile(req.path))
 	{
-		std::cout << res.Header::status[2][0] << ": " << res.Header::status[2][1] << std::endl;
+		//std::cout << res.Header::status[2][0] << ": " << res.Header::status[2][1] << std::endl;
 	}
 	return true;
 }
@@ -183,6 +202,7 @@ int main(int argc, char *argv[])
 
 	std::cout << "Listening ...\n";
 
+	std::string root = "/Users/regilliot/Code/forty-two/webserv";
 	while (true)
 	{
 		int clientFd = accept(sock_fd, NULL, NULL);
@@ -219,19 +239,20 @@ int main(int argc, char *argv[])
 
 		Request request;
 		// check request buffer
-		std::string line;
+		std::vector<std::string> lines;
 		std::istringstream strBuffer(buffer);
-		std::getline(strBuffer, line);
+		//std::getline(strBuffer, line);
+		lines = split(buffer, "\r\n");
 
-		std::cout << "line: " << line << std::endl;
+		std::cout << "line: " << lines[0] << std::endl;
 
 		//std::vector<std::string> request.firstLine;
-		std::cout << "line len: " << line.length() << std::endl;
-		request.firstLine = split(line, " ");
+		//std::cout << "line len: " << lines[0].length() << std::endl;
+		request.firstLine = split(lines[0], " ");
 		if (!checkMethod(request.firstLine[0]))
 			return 1;
 		request.method = request.firstLine[0];
-		if (!checkPath(request.firstLine[1]))
+		if (!checkPath(request.firstLine[1], root))
 			return 1;
 		request.path = request.firstLine[1];
 		if (!checkVersion(request.firstLine[2]))
@@ -247,13 +268,27 @@ int main(int argc, char *argv[])
 		std::string firstLine = "HTTP/1.1 200 OK\r\n";
 		//std::string body = "/Users/regilliot/Code/forty-two/webservgit/cockpic.png";
 
-		std::string body = "8==============================>\r\n";
+		std::ifstream imgfile("./cockpic.png");//	
+		
+		FILE* file = fopen("./cockpic.png", "r");
+		
+		char filebuffer[40000];
+
+		ssize_t bytesRead = fread(filebuffer, 1, sizeof(filebuffer), file);
+		std::cout << "bytes read:" << bytesRead << std::endl;
+
+		//std::string body = "8==============================>\r\n";
+		std::string body;
+		body.resize(bytesRead);
+		for (int i = 0; i < bytesRead; i++)
+			body[i] = filebuffer[i];
+		std::cout << "Body: " << body << std::endl;
 		std::string emptyLine = "\r\n"; 
 		//std::string contentDisp = "Content-Disposition: inline; filename='./cockpic.png'\r\n";
 
 		std::string contentLen = "Content-Length: " + std::to_string(body.size()) + "\r\n";
-	//	std::string contentType = "Content-Type: image/png\r\n";
-		std::string contentType = "Content-Type: text/html\r\n";
+		std::string contentType = "Content-Type: image/png\r\n";
+		//std::string contentType = "Content-Type: text/html\r\n";
 
 		std::string header = firstLine + contentLen + contentType + emptyLine;
 
