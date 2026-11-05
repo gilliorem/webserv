@@ -1,18 +1,20 @@
-#include <filesystem>
+// #include <filesystem> C++17
+#include <sys/stat.h>  // stat
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <fstream>
 #include <vector>
-#include <sstream>
+#include <sstream>	   // std::stringstream
 #include <string>
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <unordered_map>
+// #include <unordered_map> C++11
+#include <map>
+#include <cstdlib>	   // std::atoi (can we use it?)
 
 // server response (8===============>)
-
 
 class Request
 {
@@ -30,15 +32,17 @@ class Response
 		{
 			public:
 				std::string firstLine; 
-				std::unordered_map<unsigned int, std::string> status =
-				{
-					{200, "Success"},
-					{300, "Redirection"},
-					{400, "Client Error"},
-					{500, "Server error"}
-				};
+				std::map<unsigned int, std::string> status;
 				std::string contentLength;
 				std::string contentType;
+
+				Header()
+				{
+					status[200] = "Success";
+					status[300] = "Redirection";
+					status[400] = "Client Error";
+					status[500] = "Server error";
+				}
 		};
 		
 		std::string body;
@@ -56,7 +60,6 @@ bool checkMethod(const std::string& method)
 
 bool checkPath(const std::string& path, const std::string& root)
 {
-	
 	if (path.length() == 0 || path.length() > 1024)
 	{
 		std::cout << "wrong path\n";
@@ -64,10 +67,11 @@ bool checkPath(const std::string& path, const std::string& root)
 	}
 
 	std::string globalPath = root + path;
+	struct stat fileInfo;
 
-	if (!std::filesystem::exists(globalPath))
+	if (stat(globalPath.c_str(), &fileInfo) != 0)
 	{
-		std::cout << "File " << globalPath << " doesnt exist\n";
+		std::cerr << "File " << globalPath << " doesnt exist\n";
 		return false;
 	}
 
@@ -97,9 +101,9 @@ bool checkVersion(const std::string& version)
 std::vector<std::string> split(const std::string& content, const std::string& delimeter)
 {
 	std::vector<std::string> res;
-	
 	size_t start = 0;
-	size_t found = 0;	
+	size_t found = 0;
+
 	while (true)
 	{
 		found = content.find(delimeter, start);
@@ -119,8 +123,7 @@ std::vector<std::string> split(const std::string& content, const std::string& de
 
 bool checkFile(std::string& hostPath)
 {
-
-	std::ifstream in_file(hostPath);
+	std::ifstream in_file(hostPath.c_str());
 	if (!in_file)
 	{
 		std::cout << "Error opening file " << hostPath << std::endl;
@@ -141,7 +144,6 @@ bool checkFile(std::string& hostPath)
 
 bool getStatus(Request req, Response& res)
 {
-	
 	// if the <host> is incorrect: 404 
 	if (!checkFile(req.path))
 	{
@@ -155,7 +157,6 @@ int main(int argc, char *argv[])
 	if (argc != 2)
 	{
 		std::cerr << "usage: ./a.out <PORT>\n";
-
 		return 1;
 	}
 			     // ipv4 | 
@@ -168,7 +169,7 @@ int main(int argc, char *argv[])
 	}
 
 	int port = -1;
-	port = atoi(argv[1]);
+	port = std::atoi(argv[1]);
 
 	if (port < 0)
 	{
@@ -286,7 +287,10 @@ int main(int argc, char *argv[])
 		std::string emptyLine = "\r\n"; 
 		//std::string contentDisp = "Content-Disposition: inline; filename='./cockpic.png'\r\n";
 
-		std::string contentLen = "Content-Length: " + std::to_string(body.size()) + "\r\n";
+		std::stringstream ss;
+		ss << body.size();
+
+		std::string contentLen = "Content-Length: " + ss.str() + "\r\n";
 		std::string contentType = "Content-Type: image/png\r\n";
 		//std::string contentType = "Content-Type: text/html\r\n";
 
