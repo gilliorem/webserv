@@ -91,13 +91,6 @@ bool checkVersion(const std::string& version)
 	return true;
 }
 
-// POST / http1
-
-// <d><word><d><word>
-
-// find
-// substr
-
 std::vector<std::string> split(const std::string& content, const std::string& delimeter)
 {
 	std::vector<std::string> res;
@@ -109,13 +102,10 @@ std::vector<std::string> split(const std::string& content, const std::string& de
 		found = content.find(delimeter, start);
 		if (found == std::string::npos)
 		{
-			std::cout << "final start: " << start << std::endl;
 			res.push_back(content.substr(start));
 			break;
 		}
 		res.push_back(content.substr(start, found - start));
-		std::cout << "start: " << start << std::endl; 
-		std::cout << "found: " << found << std::endl; 
 		start = found + 1;
 	}
 	return res;
@@ -131,16 +121,6 @@ bool checkFile(std::string& hostPath)
 	}
 	return true;
 }
-
-/*
- std::unordered_map<unsigned int, std::string> status =
- {
- {200, "Success"},
- {300, "Redirection"},
- {400, "Client Error"},
- {500, "Server error"}
- };
- */
 
 bool getStatus(Request req, Response& res)
 {
@@ -203,7 +183,8 @@ int main(int argc, char *argv[])
 
 	std::cout << "Listening ...\n";
 
-	std::string root = "/Users/regilliot/Code/forty-two/webserv";
+	std::string macRoot = "/Users/regilliot/code/forty-two/webserv";
+	std::string fortyTwoRoot = "/home/regillio/Desktop/webserv";
 	while (true)
 	{
 		int clientFd = accept(sock_fd, NULL, NULL);
@@ -236,16 +217,19 @@ int main(int argc, char *argv[])
 		{
 			buffer[bytes_read] = '\0';
 			std::cout << "Request:\n" << buffer << std::endl;
+			std::cout << "End of request\n";
 		}
 
 		Request request;
 		// check request buffer
-		std::vector<std::string> lines;
+		std::vector<std::string> lines; // store our lines
+		/* and what are we doing here ?
 		std::istringstream strBuffer(buffer);
 		//std::getline(strBuffer, line);
+		*/
 		lines = split(buffer, "\r\n");
 
-		std::cout << "line: " << lines[0] << std::endl;
+		std::cout << "first line: " << lines[0] << std::endl;
 
 		//std::vector<std::string> request.firstLine;
 		//std::cout << "line len: " << lines[0].length() << std::endl;
@@ -253,7 +237,7 @@ int main(int argc, char *argv[])
 		if (!checkMethod(request.firstLine[0]))
 			return 1;
 		request.method = request.firstLine[0];
-		if (!checkPath(request.firstLine[1], root))
+		if (!checkPath(request.firstLine[1], fortyTwoRoot))
 			return 1;
 		request.path = request.firstLine[1];
 		if (!checkVersion(request.firstLine[2]))
@@ -283,7 +267,7 @@ int main(int argc, char *argv[])
 		body.resize(bytesRead);
 		for (int i = 0; i < bytesRead; i++)
 			body[i] = filebuffer[i];
-		std::cout << "Body: " << body << std::endl;
+		//std::cout << "Body: " << body << std::endl;
 		std::string emptyLine = "\r\n"; 
 		//std::string contentDisp = "Content-Disposition: inline; filename='./cockpic.png'\r\n";
 
