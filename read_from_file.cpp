@@ -3,10 +3,72 @@
 #include <cstdio>
 #include <vector>
 #include <string>
+
+std::vector<std::string> split(const std::string& content, const std::string& delimeter)
+{
+	std::vector<std::string> res;
+	size_t start = 0;
+	size_t found = 0;
+
+	while (true)
+	{
+		found = content.find(delimeter, start);
+		if (found == std::string::npos)
+		{
+			res.push_back(content.substr(start));
+			break;
+		}
+		res.push_back(content.substr(start, found - start));
+		start = found + 1;
+	}
+	return res;
+}
+
+
+class Config
+{
+	public:
+		std::vector<std::string> fileContent;
+
+		std::string listenLine;
+		//std::unordered_map<std::string, unsigned int> firstLine;
+		std::unordered_map<std::string, std::string> root;
+		std::unordered_map<std::string, unsigned int> size;
+
+		
+
+		Config(std::string filePath)
+		{
+			std::string fileLine;
+			std::ifstream file(filePath);
+			while (std::getline(file, fileLine, '\n'))
+			{
+				std::size_t found = fileLine.find("listen");
+				if (found != std::string::npos)
+				{
+					this->listenLine = fileLine;
+				}
+				else
+				{
+					std::cout << "file line: " << fileLine << std::endl;
+				}
+				this->fileContent.push_back(fileLine);
+			}
+		}
+};
+
+
+
 int main()
 {
+	// find server
+	// find http
+	//
+	// key <space> value
 
 	//std::cout << "file content:";
+	Config conf("webserv.conf");
+	return 0;
 	std::string fileLine;
 	std::vector<std::string> fileContent;
 	//std::cin >> fileContent;
@@ -17,6 +79,15 @@ int main()
 	}
 	for (std::vector<std::string>::iterator it = fileContent.begin(); it != fileContent.end(); ++it)
 		std::cout << *it << std::endl;
+
+	/* In file content, we need to find:
+	 * 'server'
+	 * 'http'
+	 * 'listen'
+	 * 'root'
+	 * ...
+	 */
+	
 	//std::cout << "file content: \n" << fileContent;
 	file.close();
 
