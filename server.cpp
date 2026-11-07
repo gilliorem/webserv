@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
 
 		// check request buffer
 		Request request;
-        if (!request.parse(buffer, clientFd, fortyTwoRoot))
+        if (!request.parse(buffer, clientFd, macRoot))
             continue;
         /*
         std::vector<std::string> header_body = split(buffer, "\r\n\r\n");
