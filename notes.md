@@ -26,9 +26,15 @@ server
 Config file parsing:
 
 open file - read file
-`std::ifstream infile(webserv.conf)` | file is open
+`FILE* filePtr = fopen("webserv.conf", "r")` | file is open
 we now put the file content in a buffer
-size_t fread ( void * ptr, size_t size, size_t count, FILE * stream ); 
+`size_t fread ( void * ptr, size_t size, size_t count, FILE * stream );`
+
+size is the element size we will read
+if we read char per char, size will be 1.
+count is the total number of elements we will read. If we read 
+1024 char then its 1024 (size * sizeof element)
+stream is the pointer that fopen returns;
 
 - parse the file content
 - split per line
