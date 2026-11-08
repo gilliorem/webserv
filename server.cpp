@@ -193,7 +193,7 @@ bool Request::parse(char* buffer, int clientFd, const std::string& root)
 		this->path = this->firstLine[1];
 		if (!checkVersion(this->firstLine[2]))
         {
-            Response response(501, "");
+            Response response(505, "");
             std::string message = response.generate();
             write(clientFd, message.c_str(), message.size());
 			close(clientFd);
