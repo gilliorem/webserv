@@ -9,12 +9,75 @@
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <unistd.h>    // read
+#include <unistd.h>    // read, close
 // #include <unordered_map> C++11
 #include <map>
 #include <cstdlib>	   // std::atoi
 
 // server response (8===============>)
+
+class Response
+{
+	public:
+        std::string firstLine; 
+        int statusCode;
+        std::map<std::string, std::string> headers;
+		std::string body;
+
+        Response(int statusCode, const std::string& body);
+
+        std::string getStatusText() const;
+        std::string generate();
+		
+};
+
+Response::Response(int statusCode, const std::string& body): statusCode(statusCode), body(body)
+{
+}
+
+/*
+   status[200] = "Success";
+   status[300] = "Redirection";
+   status[400] = "Client Error";
+   status[500] = "Server error";
+*/
+std::string Response::getStatusText() const
+{
+    if (this->statusCode == 200)
+        return "OK";
+    if (this->statusCode == 400)
+        return "Bad Request";
+    if (this->statusCode == 404)
+        return "Not Found";
+    if (this->statusCode == 500)
+        return "Internal Server Error";
+    if (this->statusCode == 501)
+        return "Not Implemented";
+    if (this->statusCode == 505)
+        return "HTTP Version Not Supported";
+
+    return "Unknown";
+}
+
+std::string Response::generate()
+{
+    std::string response;
+
+    std::stringstream ss;
+    ss << statusCode;
+
+    std::stringstream ssSize;
+    ssSize << body.size();
+
+    response += "HTTP/1.1 " + ss.str() + " " + getStatusText() + "\r\n";
+    //response += "Server: nrgi\r\n";
+    response += "Content-Length: " + ssSize.str() + "\r\n";
+    //response += "Content-Type: text/html\r\n" ;
+    response += "\r\n";
+    response += body;
+
+    return response;
+}
 
 class Request
 {
@@ -104,54 +167,35 @@ bool Request::parse(char* buffer, int clientFd, const std::string& root)
 
         if (this->firstLine.size() != 3)
         {
-            std::string response = 
-                "HTTP/1.1 400 Bad Request\r\n"
-                "Content-Length: 0\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            write(clientFd, response.c_str(), response.size());
+            Response response(400, "");
+            std::string message = response.generate();
+            write(clientFd, message.c_str(), message.size());
 			close(clientFd);
 			return false;
         }
 		if (!checkMethod(this->firstLine[0]))
         {
-            // Return HTTP 501 Not Implemented
-            std::string response = 
-                "HTTP/1.1 501 Not Implemented\r\n"
-                "Content-Length: 0\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            write(clientFd, response.c_str(), response.size());
+            Response response(501, "");
+            std::string message = response.generate();
+            write(clientFd, message.c_str(), message.size());
 			close(clientFd);
 			return false;
         }
 		this->method = this->firstLine[0];
 		if (!checkPath(this->firstLine[1], root))
         { 
-            // Return HTTP 404 Not Found
-            std::string response = 
-                "HTTP/1.1 404 Not Found\r\n"
-                "Content-Length: 0\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            write(clientFd, response.c_str(), response.size());
+            Response response(404, "");
+            std::string message = response.generate();
+            write(clientFd, message.c_str(), message.size());
 			close(clientFd);
 			return false;
         }
 		this->path = this->firstLine[1];
 		if (!checkVersion(this->firstLine[2]))
         {
-            // Return HTTP 505 HTTP Version Not Supported
-            std::string response = 
-                "HTTP/1.1 505 HTTP Version Not Supported\r\n"
-                "Content-Length: 0\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            write(clientFd, response.c_str(), response.size());
+            Response response(501, "");
+            std::string message = response.generate();
+            write(clientFd, message.c_str(), message.size());
 			close(clientFd);
 			return false;
         }
@@ -172,29 +216,6 @@ bool Request::parse(char* buffer, int clientFd, const std::string& root)
 		std::cout << "request has been read successfully \n";
         return true;
 }
-
-class Response
-{
-	public:
-		class Header
-		{
-			public:
-				std::string firstLine; 
-				std::map<unsigned int, std::string> status;
-				std::string contentLength;
-				std::string contentType;
-
-				Header()
-				{
-					status[200] = "Success";
-					status[300] = "Redirection";
-					status[400] = "Client Error";
-					status[500] = "Server error";
-				}
-		};
-		
-		std::string body;
-};
 
 
 bool checkFile(const std::string& hostPath)
@@ -397,10 +418,10 @@ int main(int argc, char *argv[])
 		std::cout << "request has been read successfully \n";
         */
 
-		Response response;
-		//Response::Header responseHeader;
-		//responseHeader.firstLine = "HTTP/1.1" + responseHeader[200];
-		//responseHeader.status = getStatus();
+		Response response(200, "OK");
+        std::string message = response.generate();
+        write(clientFd, message.c_str(), message.size());
+        /*
 		std::string firstLine = "HTTP/1.1 200 OK\r\n";
 		std::ifstream imgfile("./cockpic.png");	
 		
@@ -428,9 +449,9 @@ int main(int argc, char *argv[])
 		//std::string contentType = "Content-Type: text/html\r\n";
 
 		std::string header = firstLine + contentLen + contentType + emptyLine;
-
 		write(clientFd, header.c_str(), header.size());
 		write(clientFd, body.c_str(), body.size());
+        */
 		close(clientFd);
 	}
 	close(sock_fd);
