@@ -9,7 +9,14 @@ separate in different parts:
 
 The client|server connection needs to be established through a config file
 
-give it a config file that has
+Directives are divided into simple directives and block directives. 
+A simple directive consists of the name and parameters separated by spaces and ends with a semicolon (;).
+A block directive has the same structure as a simple directive, but instead of the semicolon it ends with a set of additional instructions surrounded by braces ({ and }).
+If a block directive can have other directives inside braces, it is called a context (examples: events, http, server, and location).
+
+Directives placed in the configuration file outside of any contexts are considered to be in the main context. The events and http directives reside in the main context, server in http, and location in server.
+
+The rest of a line after the # sign is considered a comment.
 
 
 server
@@ -24,6 +31,34 @@ server
 }
 
 Config file parsing:
+
+the architecture of a parser that checks
+
+[] get starting with nginx 60
+
+[] Refactor the Config class - 20 + 20 + 20
+[] Move the unrelated to config member - 10
+[] refactor the Config constructor - 10
+
+
+Expected class - 20
+[] create the Expected class 
+
+[] check if the config file exist - 5
+[] check if we can open it  - 5
+[] check if we can read it - 5
+
+reading it:
+[] save everything in a file buffer - 10
+
+check the file buffer:
+[] check the length of the file (have a max char limit) - 10
+[] check the presence of the spec keywords (listen, root, size) - 10
+
+[] fill the Req attribute with the parsed data of conf file - 10
+
+---
+
 
 open file - read file
 `FILE* filePtr = fopen("webserv.conf", "r")` | file is open

@@ -257,6 +257,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	/* get from config file */
+	//Config conf("webserv.conf");
 	int port = -1;
 	port = std::atoi(argv[1]);
 

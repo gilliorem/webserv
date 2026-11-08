@@ -25,23 +25,65 @@ std::vector<std::string> split(const std::string& content, const std::string& de
 	return res;
 }
 
+/* the config class is responsible for parsing the config file:
+ * it will make sure the file exist with all the required information 
+ * it will save those info in the `fileContent` vector that will later been use to construct a Request */
+/* the `fileContent` will save a list of mapped information such as
+ * listen port {key value} 
+ * 
+ */
+
+// parse line by line
+// first line
+
+struct configLine
+{
+	std::string addr;
+	int port;
+};
+
+
+
+std::vector<std::string> parseConfigLine(const std::string &filePath)
+{
+	std::string line;	
+	std::ifstream file(filePath); // check return value
+	std::vector<std::string> lineContent;
+	while (std::getline(file, line, '\n'))
+	{
+		lineContent = split(line, " ");
+	}
+
+	return lineContent;
+}
+
+
 
 class Config
 {
 	public:
-		std::vector<std::string> fileContent;
+	std::string addr;
+	int port;
+
+	Config(std::string filePath);
+};
+
+class Config
+{
+	public:
+		//std::vector<std::string> fileContent; 
+		std::vector<std::map<std::string, std::string>> fileContent;
 		std::vector<std::string> lineContent;
-
-		std::map<std::string, unsigned int> listenPort;
+		/*
+		std::map<std::string, std::string> listenPort;
 		std::map<std::string, std::string> root;
-		std::map<std::string, unsigned int> reqSize;
-		std::map<std::string, unsigned int> fileSize;
-
+		std::map<std::string, std::string> reqSize;
+		std::map<std::string, std::string> fileSize;
+		*/
 		Config(std::string filePath)
 		{
 			std::string fileLine; // temp
 			std::ifstream file(filePath);
-			
 			while (std::getline(file, fileLine, '\n'))
 			{
 				this->lineContent = split(fileLine, " ");
@@ -49,11 +91,10 @@ class Config
 				std::size_t rootFound = fileLine.find("root");
 				std::size_t sizeReqFound = fileLine.find("max_size_req");
 				std::size_t sizeFileFound = fileLine.find("max_size_file");
-				this->fileContent.push_back(fileLine);
 				if (listenFound != std::string::npos)
 				{
 					this->listenPort[this->lineContent[0]] = std::atoi(this->lineContent[1].c_str());	
-					std::map<std::string, unsigned int>::iterator it = listenPort.begin();	
+					std::map<std::string, std::string>::iterator it = listenPort.begin();	
 					std::cout << "key:" <<  it->first << "|";
 					std::cout << "value:" <<  it->second;
 					std::cout << std::endl;
@@ -71,7 +112,7 @@ class Config
 				if (sizeReqFound != std::string::npos)
 				{
 					this->reqSize[this->lineContent[0]] = std::atoi(this->lineContent[1].c_str());	
-					std::map<std::string, unsigned int>::iterator it = reqSize.begin();	
+					std::map<std::string, std::string>::iterator it = reqSize.begin();	
 					std::cout << "key:" <<  it->first << "|";
 					std::cout << "value:" <<  it->second;
 					std::cout << std::endl;
@@ -80,7 +121,7 @@ class Config
 				if (sizeFileFound != std::string::npos)
 				{
 					this->fileSize[this->lineContent[0]] = std::atoi(this->lineContent[1].c_str());	
-					std::map<std::string, unsigned int>::iterator it = fileSize.begin();	
+					std::map<std::string, std::string>::iterator it = fileSize.begin();	
 					std::cout << "key:" <<  it->first << "|";
 					std::cout << "value:" <<  it->second;
 					std::cout << std::endl;
@@ -94,10 +135,14 @@ class Config
 		}
 };
 
-
-
-int main()
+int main(int argc, char *argv[])
 {
+	if (argc != 2)
+	{
+		// can also use a default config file if no conf file has been provide.
+		std::cout << "need to provide config file\n";
+		return 1;
+	}
 	Config conf("webserv.conf");
 
 	return 0;
