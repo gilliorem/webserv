@@ -13,7 +13,7 @@
 // #include <unordered_map> C++11
 #include <map>
 #include <cstdlib>	   // std::atoi
-
+#include "utils.hpp" 		// split
 // server response (8===============>)
 
 class Response
@@ -91,25 +91,6 @@ class Request
 
         bool parse(char* buffer, int clientFd, const std::string& root);
 };
-
-std::vector<std::string> split(const std::string& content, const std::string& delimiter)
-{
-	std::vector<std::string> res;
-	size_t start = 0;
-
-	while (true)
-	{
-		size_t found = content.find(delimiter, start);
-		if (found == std::string::npos)
-		{
-			res.push_back(content.substr(start));
-			break;
-		}
-		res.push_back(content.substr(start, found - start));
-		start = found + delimiter.length();
-	}
-	return res;
-}
 
 bool checkMethod(const std::string& method)
 {

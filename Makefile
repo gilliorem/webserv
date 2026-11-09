@@ -1,14 +1,14 @@
 # Compiler and parameters
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+# CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
 # File name
 NAME = webserv
 
 # Mandatory Sources
-SOURCES = server.cpp
+SOURCES = server.cpp utils.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
-HEADERS =
+HEADERS = utils.hpp
 
 # Rules
 # Compile
