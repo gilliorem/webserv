@@ -14,15 +14,6 @@
  * 
  */
 
-// parse line by line
-// first line
-
-struct configLine
-{
-	std::string addr;
-	int port;
-};
-
 std::vector<std::map<std::string, std::string>> parseConfigLine(const std::string &filePath)
 {
 	std::vector <std::map <std::string, std::string>> linesKeyValue;
@@ -37,83 +28,72 @@ std::vector<std::map<std::string, std::string>> parseConfigLine(const std::strin
 			std::vector<std::string> lineContent = split(line, " ");
 			if (lineContent.size() > 1)
 			{
-				//std::cout << "key: " << lineContent[0] << " | Value: " << lineContent[1] << std::endl;
 				keyValue[lineContent[0]] = lineContent[1];
-				//std::cout << "Key: " << keyValue[lineContent[0]] << " | Value: " << keyValue[lineContent[1]] << std::endl;
-				//std::cout << "Key: " << key << " | Value: " << value << std::endl;
-				//std::cout << "key:" << lineContent[0] << std::endl;
-				//std::cout << "value:" << lineContent[1] << std::endl;
-				linesKeyValue.push_back(keyValue);
 			}
 		}
 	}
+	linesKeyValue.push_back(keyValue);
 	return linesKeyValue;
 }
 
-
-
 void printParsedFile(std::vector <std::map <std::string, std::string>> &linesKeyValue)
 {
-	std::cout << "v size: " << linesKeyValue.size() << std::endl;
-	//for (std::vector <std::map <std::string, std::string>>::iterator it = linesKeyValue.begin(); it != linesKeyValue.end(); ++it)
 	for (std::vector<std::map <std::string, std::string>>::iterator it = linesKeyValue.begin(); it != linesKeyValue.end(); it++)
-	//for (int i = 0; i < linesKeyValue.size(); i++)
 	{
-		//std::cout << "here\n";
-		//std::map <std::string, std::string>::iterator mapIt;
-		//mapIt = (*it).begin();
-		//std::cout << mapIt->first << std::endl;
-		//std::cout << mapIt->second << std::endl;
-		int i = 0;
 		for (std::map <std::string, std::string>::iterator mapIt = (*it).begin(); mapIt != (*it).end(); mapIt++)
 		{
-			std::cout << "map size: " << (*it).size() << std::endl;
-			std::cout << "i: " << i;
-			std::cout << "key:" << mapIt->first << " | value:" << mapIt->second << std::endl;
-			i++;
+			std::cout << "key:" << mapIt->first << "|value:" << mapIt->second << std::endl;
 		}
 	}
 }
-		//   std::map <std::string, std::string>::iterator it = listenPort.begin();	
-		/*
-		for (std::map <std::string, std::string>::iterator it = keyValue.begin(); it != keyValue.end(); it++)
-		{
-			std::cout << "key:" << it->first << " | value:" << it->second << std::endl;
-		}
-		*/
-		//std::map <std::string, std::string>::iterator mapIt;
-		//mapIt = *it;
 
-/*
-std::vector<std::string> parseConfigLine(const std::string &filePath)
+std::string getValue(std::vector <std::map <std::string, std::string>> &linesKeyValue, const std::string &key)
 {
-	std::string line;	
-	std::ifstream file(filePath); // check return value
-	std::vector<std::string> lineContent;
-	while (std::getline(file, line, '\n'))
+	for (std::vector<std::map <std::string, std::string>>::iterator it = linesKeyValue.begin(); it != linesKeyValue.end(); it++)
 	{
-		lineContent = split(line, " ");
+		for (std::map <std::string, std::string>::iterator mapIt = (*it).begin(); mapIt != (*it).end(); mapIt++)
+		{
+			//std::cout << "key:" << mapIt->first << "|value:" << mapIt->second << std::endl;
+			//std::cout << "key:" << mapIt->first << std::endl;
+			if (mapIt->first == key)
+				return mapIt->second;
+		}
 	}
-
-	return lineContent;
+	return "";
 }
 
 class Config
 {
 	public:
+	std::vector<std::map <std::string, std::string>> fileContent;
+	std::string listenValue;
 	std::string addr;
 	int port;
+	std::string root;
+	std::string location;
 
-	Config(std::string filePath);
+	Config(const std::string &filePath)
+	{
+		this->fileContent = parseConfigLine(filePath);	
+		this->listenValue = getValue(this->fileContent, "listen");
+		this->root= getValue(this->fileContent, "root");
+		this->location = getValue(this->fileContent, "location");
+		std::size_t findPort = this->listenValue.find(":");
+		if (findPort != std::string::npos)
+		{
+			this->addr = this->listenValue.substr(0, findPort);
+			this->port = std::atoi(this->listenValue.substr(findPort+1).c_str());
+		}
+	}
+
 };
-*/
 
+/*
 class Config
 {
 	public:
-		//std::vector<std::string> fileContent; 
 		std::vector<std::map<std::string, std::string>> fileContent;
-		std::vector<std::string> lineContent;
+		std::string line;
 		std::map<std::string, std::string> listenPort;
 		std::map<std::string, std::string> root;
 		std::map<std::string, std::string> reqSize;
@@ -172,8 +152,9 @@ class Config
 			}
 		}
 };
+*/
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	if (argc != 2)
 	{
@@ -181,9 +162,21 @@ int main(int argc, char *argv[])
 		std::cout << "need to provide config file\n";
 		return 1;
 	}
-	std::vector <std::map <std::string, std::string>> linesKeyValue;
-	linesKeyValue = parseConfigLine("webserv.conf");
-	printParsedFile(linesKeyValue);
+	/*
+	std::map <std::string, std::string> keyValue;
+	keyValue["key"] = "value";
+	linesKeyValue.push_back(keyValue);
+	*/
+
+	std::string filePath = argv[1];
+	
+	Config c(filePath);
+	std::cout << c.listenValue << std::endl;
+	std::cout << c.addr << std::endl;
+	std::cout << c.port << std::endl;
+	std::cout << c.root << std::endl;
+	std::cout << c.location << std::endl;
+
 	return 0;
 
 	/*
