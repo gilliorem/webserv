@@ -29,34 +29,48 @@ std::vector<std::map<std::string, std::string>> parseConfigLine(const std::strin
 
 	std::string line;
 	std::ifstream file(filePath);
-	std::string key;
-	std::string value;
 	std::map<std::string, std::string> keyValue;
 	while (std::getline(file, line, '\n'))
 	{
 		if (line.length() > 1)
 		{
 			std::vector<std::string> lineContent = split(line, " ");
-			//std::cout << "key: " << lineContent[0] << " | Value: " << lineContent[1] << std::endl;
-			keyValue[lineContent[0]] = key;
-			keyValue[lineContent[1]] = value;
-			//std::cout << "Key: " << keyValue[lineContent[0]] << " | Value: " << keyValue[lineContent[1]] << std::endl;
-			//std::cout << "Key: " << key << " | Value: " << value << std::endl;
-			linesKeyValue.push_back(keyValue);
+			if (lineContent.size() > 1)
+			{
+				//std::cout << "key: " << lineContent[0] << " | Value: " << lineContent[1] << std::endl;
+				keyValue[lineContent[0]] = lineContent[1];
+				//std::cout << "Key: " << keyValue[lineContent[0]] << " | Value: " << keyValue[lineContent[1]] << std::endl;
+				//std::cout << "Key: " << key << " | Value: " << value << std::endl;
+				//std::cout << "key:" << lineContent[0] << std::endl;
+				//std::cout << "value:" << lineContent[1] << std::endl;
+				linesKeyValue.push_back(keyValue);
+			}
 		}
 	}
 	return linesKeyValue;
 }
 
+
+
 void printParsedFile(std::vector <std::map <std::string, std::string>> &linesKeyValue)
 {
+	std::cout << "v size: " << linesKeyValue.size() << std::endl;
 	//for (std::vector <std::map <std::string, std::string>>::iterator it = linesKeyValue.begin(); it != linesKeyValue.end(); ++it)
 	for (std::vector<std::map <std::string, std::string>>::iterator it = linesKeyValue.begin(); it != linesKeyValue.end(); it++)
 	//for (int i = 0; i < linesKeyValue.size(); i++)
 	{
+		//std::cout << "here\n";
+		//std::map <std::string, std::string>::iterator mapIt;
+		//mapIt = (*it).begin();
+		//std::cout << mapIt->first << std::endl;
+		//std::cout << mapIt->second << std::endl;
+		int i = 0;
 		for (std::map <std::string, std::string>::iterator mapIt = (*it).begin(); mapIt != (*it).end(); mapIt++)
 		{
+			std::cout << "map size: " << (*it).size() << std::endl;
+			std::cout << "i: " << i;
 			std::cout << "key:" << mapIt->first << " | value:" << mapIt->second << std::endl;
+			i++;
 		}
 	}
 }
@@ -171,6 +185,9 @@ int main(int argc, char *argv[])
 	linesKeyValue = parseConfigLine("webserv.conf");
 	printParsedFile(linesKeyValue);
 	return 0;
+
+	/*
+
 	Config conf("webserv.conf");
 
 	return 0;
@@ -185,14 +202,6 @@ int main(int argc, char *argv[])
 	for (std::vector<std::string>::iterator it = fileContent.begin(); it != fileContent.end(); ++it)
 		std::cout << *it << std::endl;
 
-	/* In file content, we need to find:
-	 * 'server'
-	 * 'http'
-	 * 'listen'
-	 * 'root'
-	 * ...
-	 */
-	
 	//std::cout << "file content: \n" << fileContent;
 	file.close();
 
@@ -212,7 +221,7 @@ int main(int argc, char *argv[])
 	rewind (pFile);
 
 
-	/* size_t fread ( void * ptr, size_t size, size_t count, FILE * stream ); */
+	// size_t fread ( void * ptr, size_t size, size_t count, FILE * stream ); 
 	// say we have the size file before reading
 
 	buffer = (char*)malloc(sizeof(lSize));
@@ -227,5 +236,6 @@ int main(int argc, char *argv[])
 	fclose(pFile);
 	free(buffer);
 	return 0;
+	*/
 
 }
