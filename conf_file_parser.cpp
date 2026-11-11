@@ -47,19 +47,26 @@ void printParsedFile(std::vector <std::map <std::string, std::string>> &linesKey
 	}
 }
 
+std::string defaultValue(const std::string& key)
+{
+	std::vector<std::string> keys = {"listen", "root", "location"};
+	std::vector<std::string>::iterator it;
+	switch (*it):
+	case "listen":
+
+}
+
 std::string getValue(std::vector <std::map <std::string, std::string>> &linesKeyValue, const std::string &key)
 {
 	for (std::vector<std::map <std::string, std::string>>::iterator it = linesKeyValue.begin(); it != linesKeyValue.end(); it++)
 	{
 		for (std::map <std::string, std::string>::iterator mapIt = (*it).begin(); mapIt != (*it).end(); mapIt++)
 		{
-			//std::cout << "key:" << mapIt->first << "|value:" << mapIt->second << std::endl;
-			//std::cout << "key:" << mapIt->first << std::endl;
 			if (mapIt->first == key)
 				return mapIt->second;
 		}
 	}
-	return "";
+	return defaultValue(key);
 }
 
 class Config
@@ -76,7 +83,7 @@ class Config
 	{
 		this->fileContent = parseConfigLine(filePath);	
 		this->listenValue = getValue(this->fileContent, "listen");
-		this->root= getValue(this->fileContent, "root");
+		this->root = getValue(this->fileContent, "root");
 		this->location = getValue(this->fileContent, "location");
 		std::size_t findPort = this->listenValue.find(":");
 		if (findPort != std::string::npos)
@@ -87,72 +94,6 @@ class Config
 	}
 
 };
-
-/*
-class Config
-{
-	public:
-		std::vector<std::map<std::string, std::string>> fileContent;
-		std::string line;
-		std::map<std::string, std::string> listenPort;
-		std::map<std::string, std::string> root;
-		std::map<std::string, std::string> reqSize;
-		std::map<std::string, std::string> fileSize;
-		Config(std::string filePath)
-		{
-			std::string fileLine; // temp
-			std::ifstream file(filePath);
-			while (std::getline(file, fileLine, '\n'))
-			{
-				this->lineContent = split(fileLine, " ");
-				std::size_t listenFound = fileLine.find("listen");
-				std::size_t rootFound = fileLine.find("root");
-				std::size_t sizeReqFound = fileLine.find("max_size_req");
-				std::size_t sizeFileFound = fileLine.find("max_size_file");
-				if (listenFound != std::string::npos)
-				{
-					this->listenPort[this->lineContent[0]] = std::atoi(this->lineContent[1].c_str());	
-					std::map<std::string, std::string>::iterator it = listenPort.begin();	
-					std::cout << "key:" <<  it->first << "|";
-					std::cout << "value:" <<  it->second;
-					std::cout << std::endl;
-					continue;
-				}
-				if (rootFound != std::string::npos)
-				{
-					this->root[this->lineContent[0]] = this->lineContent[1];
-					std::map<std::string, std::string>::iterator it = root.begin();	
-					std::cout << "key:" <<  it->first << "|";
-					std::cout << "value:" <<  it->second;
-					std::cout << std::endl;
-					continue;
-				}
-				if (sizeReqFound != std::string::npos)
-				{
-					this->reqSize[this->lineContent[0]] = std::atoi(this->lineContent[1].c_str());	
-					std::map<std::string, std::string>::iterator it = reqSize.begin();	
-					std::cout << "key:" <<  it->first << "|";
-					std::cout << "value:" <<  it->second;
-					std::cout << std::endl;
-					continue;
-				}
-				if (sizeFileFound != std::string::npos)
-				{
-					this->fileSize[this->lineContent[0]] = std::atoi(this->lineContent[1].c_str());	
-					std::map<std::string, std::string>::iterator it = fileSize.begin();	
-					std::cout << "key:" <<  it->first << "|";
-					std::cout << "value:" <<  it->second;
-					std::cout << std::endl;
-					continue;
-				}
-				else
-				{
-					std::cout << "file line: " << fileLine << std::endl;
-				}
-			}
-		}
-};
-*/
 
 int main(int argc, const char *argv[])
 {
@@ -172,6 +113,7 @@ int main(int argc, const char *argv[])
 	
 	Config c(filePath);
 	std::cout << c.listenValue << std::endl;
+	return 0;
 	std::cout << c.addr << std::endl;
 	std::cout << c.port << std::endl;
 	std::cout << c.root << std::endl;
