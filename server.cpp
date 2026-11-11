@@ -1,20 +1,19 @@
 // #include <filesystem> C++17
-#include <sys/stat.h>  // stat
+#include <sys/stat.h>   // stat
 #include <sys/types.h>
 #include <sys/uio.h>
-#include <fstream>
+#include <fstream>      // std::ifstream
 #include <vector>
-#include <sstream>	   // std::stringstream
+#include <sstream>	    // std::stringstream
 #include <string>
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <unistd.h>    // read, close
+#include <unistd.h>     // read, close
 // #include <unordered_map> C++11
 #include <map>
-#include <cstdlib>	   // std::atoi
-#include "utils.hpp" 		// split
-// server response (8===============>)
+#include <cstdlib>	    // std::atoi
+#include "utils.hpp"    // split
 
 class Response
 {
@@ -72,11 +71,65 @@ std::string Response::generate()
     response += "HTTP/1.1 " + ss.str() + " " + getStatusText() + "\r\n";
     //response += "Server: nrgi\r\n";
     response += "Content-Length: " + ssSize.str() + "\r\n";
-    //response += "Content-Type: text/html\r\n" ;
+    response += "Content-Type: " + headers["Content-Type"] + "\r\n";
     response += "\r\n";
     response += body;
 
     return response;
+}
+
+// Can use binary mode for all file types: .txt, .html, .css, .png, .jpg, .pdf
+bool readFile(const std::string& path, std::string& content)
+{
+    std::ifstream file(path.c_str(), std::ios::binary);
+
+    if (!file)
+        return false;
+
+    // Read the file buffer directly into a stringstream
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    if (!buffer)
+        return false;
+
+    // Store the stream content into a single string variable
+    content = buffer.str();
+
+    return true;
+}
+
+// Content-Type: HTML, CSS, JS, PNG, JPG, TXT
+std::string getContentType(const std::string& path)
+{
+    std::string::size_type pos = path.rfind('.');
+
+    if (pos == std::string::npos)
+        return "application/octet-stream";
+
+    std::string extension = path.substr(pos);
+
+    if (extension == ".html" || extension == ".htm")
+        return "text/html";
+    if (extension == ".css")
+        return "text/css";
+    if (extension == ".js")
+        return "text/javascript";
+    if (extension == ".txt")
+        return "text/plain";
+    if (extension == ".json")
+        return "application/json";
+    if (extension == ".png")
+        return "image/png";
+    if (extension == ".jpg" || extension == ".jpeg")
+        return "image/jpeg";
+    if (extension == ".gif")
+        return "image/gif";
+    if (extension == ".svg")
+        return "image/svg+xml";
+    if (extension == ".pdf")
+        return "application/pdf";
+
+    return "application/octet-stream";
 }
 
 class Request
@@ -276,7 +329,8 @@ int main(int argc, char *argv[])
 	std::cout << "Listening ...\n";
 
 	std::string macRoot = "/Users/regilliot/code/forty-two/webserv";
-	std::string fortyTwoRoot = "/home/regillio/Desktop/webserv";
+	//std::string fortyTwoRoot = "/home/regillio/Desktop/webserv";
+	std::string fortyTwoRoot = "/home/yucchen/CommonCore/webserv";
 	while (true)
 	{
 		int clientFd = accept(sock_fd, NULL, NULL);
@@ -318,92 +372,26 @@ int main(int argc, char *argv[])
 
 		// check request buffer
 		Request request;
-        if (!request.parse(buffer, clientFd, macRoot))
+        if (!request.parse(buffer, clientFd, fortyTwoRoot))
             continue;
-        /*
-        std::vector<std::string> header_body = split(buffer, "\r\n\r\n");
-        std::cout << "header:\n" << header_body[0] << std::endl;
-        std::cout << "body:\n" << header_body[1] << std::endl;
-        
-		std::vector<std::string> headerLines = split(header_body[0], "\r\n"); // store our lines
 
-        // Request firstLine: GET / HTTP/1.1
-		std::cout << "first line: " << headerLines[0] << std::endl;
-		request.firstLine = split(headerLines[0], " ");
+        std::string content;
+        std::string filePath = fortyTwoRoot + request.path;
 
-        if (request.firstLine.size() != 3)
+        if (!readFile(filePath, content))
         {
-            std::string response = 
-                "HTTP/1.1 400 Bad Request\r\n"
-                "Content-Length: 0\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            write(clientFd, response.c_str(), response.size());
-			close(clientFd);
-			continue;
+            Response response(404, "Not Found");
+            std::string message = response.generate();
+            write(clientFd, message.c_str(), message.size());
         }
-		if (!checkMethod(request.firstLine[0]))
+        else
         {
-            // Return HTTP 501 Not Implemented
-            std::string response = 
-                "HTTP/1.1 501 Not Implemented\r\n"
-                "Content-Length: 0\r\n"
-                "Connection: close\r\n"
-                "\r\n";
+		    Response response(200, content);
+            response.headers["Content-Type"] = getContentType(filePath);
 
-            write(clientFd, response.c_str(), response.size());
-			close(clientFd);
-			continue;
+            std::string message = response.generate();
+            write(clientFd, message.c_str(), message.size());
         }
-		request.method = request.firstLine[0];
-		if (!checkPath(request.firstLine[1], fortyTwoRoot))
-        { 
-            // Return HTTP 404 Not Found
-            std::string response = 
-                "HTTP/1.1 404 Not Found\r\n"
-                "Content-Length: 0\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            write(clientFd, response.c_str(), response.size());
-			close(clientFd);
-			continue;
-        }
-		request.path = request.firstLine[1];
-		if (!checkVersion(request.firstLine[2]))
-        {
-            // Return HTTP 505 HTTP Version Not Supported
-            std::string response = 
-                "HTTP/1.1 505 HTTP Version Not Supported\r\n"
-                "Content-Length: 0\r\n"
-                "Connection: close\r\n"
-                "\r\n";
-
-            write(clientFd, response.c_str(), response.size());
-			close(clientFd);
-			continue;
-        }
-		request.version = request.firstLine[2];
-
-        // Request Headers
-        for (size_t i = 1; i < headerLines.size(); i++)
-        {
-            std::cout << "headerLines[" << i << "]: " << std::endl;
-            std::vector<std::string> key_value = split(headerLines[i], ": ");
-            std::cout << "key: " << key_value[0] << std::endl;
-            std::cout << "value: " << key_value[1] << std::endl;
-            request.headers[key_value[0]] = key_value[1];
-        }
-
-        // Request Body
-        request.body = header_body[1];
-		std::cout << "request has been read successfully \n";
-        */
-
-		Response response(200, "OK");
-        std::string message = response.generate();
-        write(clientFd, message.c_str(), message.size());
         /*
 		std::string firstLine = "HTTP/1.1 200 OK\r\n";
 		std::ifstream imgfile("./cockpic.png");	
