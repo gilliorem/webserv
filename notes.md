@@ -34,12 +34,11 @@ Config file parsing:
 
 the architecture of a parser that checks
 
-[] get starting with nginx 60
+[x] get starting with nginx 60
 
-[] Refactor the Config class - 20 + 20 + 20
-[] Move the unrelated to config member - 10
-[] refactor the Config constructor - 10
-
+[x] Refactor the Config class - 20 + 20 + 20
+[x] Move the unrelated to config member - 10
+[x] refactor the Config constructor - 10
 
 Expected class - 20
 [] create the Expected class 

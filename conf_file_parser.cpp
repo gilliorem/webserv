@@ -36,6 +36,66 @@ std::vector<std::map<std::string, std::string>> parseConfigLine(const std::strin
 	return linesKeyValue;
 }
 
+
+bool isWord(std::vector<std::string> &fileContent, const std::string& word)
+{
+
+	for (std::vector<std::string>::iterator it = fileContent.begin(); it != fileContent.end(); it++)
+	{
+		if (*it == word)
+			return true;
+	}
+	return false;
+}
+
+void parser()
+{
+	/* PARTS */
+	std::string general = "--//GENERAL//--";;
+	std::string server = "--//SERVER//--";;
+
+	int partsName = 2;
+	std::vector<std::string>partWords;
+	partWords.push_back(general);
+	partWords.push_back(server);
+
+	/* GENERAL VARS */
+	int partsVars = 4;
+	std::string user = "user";
+	std::string root = "root";
+
+	std::string macPath = "/Users/regilliot/code/forty_two/webserv/www/";
+	std::string linuxPath = "/home/regillio/Desktop/webserv/www/";
+	std::string errorPagePath = linuxPath + "errorPage/";
+
+	/* SERVER VARS */
+
+	int serverVars = 2;
+
+	/* KEYS */
+	std::string location = "location";
+	std::string localhost = "localhost";
+
+	/* VALUES */
+	std::string port;
+	std::string locationPath = "";
+
+	#ifndef MAC
+		errorPagePath = macPath + "errorPage/";
+	#endif
+
+	errorPagePath = linuxPath + "errorPage/";
+	std::vector<std::string>fileContent;
+	std::string fileWord;
+	std::ifstream file("webserv.mac.conf");
+	while (file >> fileWord)
+	{
+		fileContent.push_back(fileWord);
+	}
+	bool isGeneral = isWord(fileContent, general);
+
+}
+
 void printParsedFile(std::vector <std::map <std::string, std::string>> &linesKeyValue)
 {
 	for (std::vector<std::map <std::string, std::string>>::iterator it = linesKeyValue.begin(); it != linesKeyValue.end(); it++)
@@ -90,6 +150,8 @@ class Config
 
 int main(int argc, const char *argv[])
 {
+	parser();
+	return 0;
 	if (argc != 2)
 	{
 		// can also use a default config file if no conf file has been provide.
