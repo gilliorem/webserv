@@ -10,7 +10,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>     // read, close
-// #include <unordered_map> C++11
 #include <map>
 #include <cstdlib>	    // std::atoi
 #include "utils.hpp"    // split
@@ -190,6 +189,13 @@ bool checkVersion(const std::string& version)
 bool Request::parse(char* buffer, int clientFd, const std::string& root)
 {
         std::vector<std::string> header_body = split(buffer, "\r\n\r\n");
+
+        if (header_body.size() < 2)
+        {
+            close(clientFd);
+            return false;
+        }
+
         std::cout << "header:\n" << header_body[0] << std::endl;
         std::cout << "body:\n" << header_body[1] << std::endl;
         
@@ -240,6 +246,18 @@ bool Request::parse(char* buffer, int clientFd, const std::string& root)
         {
             std::cout << "headerLines[" << i << "]: " << std::endl;
             std::vector<std::string> key_value = split(headerLines[i], ": ");
+
+            if (key_value.size() < 2)
+            {
+                Response response(400, "Bad Request");
+                response.headers["Content-Type"] = "text/plain";
+
+                std::string message = response.generate();
+                write(clientFd, message.c_str(), message.size());
+                close(clientFd);
+                return false;
+            }
+
             std::cout << "key: " << key_value[0] << std::endl;
             std::cout << "value: " << key_value[1] << std::endl;
             this->headers[key_value[0]] = key_value[1];
@@ -328,8 +346,9 @@ int main(int argc, char *argv[])
 
 	std::cout << "Listening ...\n";
 
-	std::string macRoot = "/Users/regilliot/code/forty-two/webserv";
+	//std::string macRoot = "/Users/regilliot/code/forty-two/webserv";
 	//std::string fortyTwoRoot = "/home/regillio/Desktop/webserv";
+	std::string macRoot = "/Users/chenyuchi/CommonCore/webserv";
 	std::string fortyTwoRoot = "/home/yucchen/CommonCore/webserv";
 	while (true)
 	{
@@ -372,11 +391,11 @@ int main(int argc, char *argv[])
 
 		// check request buffer
 		Request request;
-        if (!request.parse(buffer, clientFd, fortyTwoRoot))
+        if (!request.parse(buffer, clientFd, macRoot))
             continue;
 
         std::string content;
-        std::string filePath = fortyTwoRoot + request.path;
+        std::string filePath = macRoot + request.path;
 
         if (!readFile(filePath, content))
         {
