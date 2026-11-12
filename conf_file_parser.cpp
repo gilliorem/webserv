@@ -47,15 +47,6 @@ void printParsedFile(std::vector <std::map <std::string, std::string>> &linesKey
 	}
 }
 
-std::string defaultValue(const std::string& key)
-{
-	std::vector<std::string> keys = {"listen", "root", "location"};
-	std::vector<std::string>::iterator it;
-	switch (*it):
-	case "listen":
-
-}
-
 std::string getValue(std::vector <std::map <std::string, std::string>> &linesKeyValue, const std::string &key)
 {
 	for (std::vector<std::map <std::string, std::string>>::iterator it = linesKeyValue.begin(); it != linesKeyValue.end(); it++)
@@ -66,8 +57,10 @@ std::string getValue(std::vector <std::map <std::string, std::string>> &linesKey
 				return mapIt->second;
 		}
 	}
-	return defaultValue(key);
+	//return defaultValue(key);
+	return "default";
 }
+
 
 class Config
 {
