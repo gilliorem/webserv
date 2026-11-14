@@ -1,5 +1,4 @@
-// #include <filesystem> C++17
-#include <sys/stat.h>   // stat
+#include <sys/stat.h>   // stat, S_ISDIR
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <fstream>      // std::ifstream
@@ -172,6 +171,13 @@ bool checkPath(const std::string& path, const std::string& root)
 		return false;
 	}
 
+    // Handle directory
+    if (S_ISDIR(fileInfo.st_mode))
+    {
+        std::cout << globalPath << " is a directory" << std::endl;
+        return false;
+    }
+
 	return true;
 }
 
@@ -213,6 +219,7 @@ bool Request::parse(char* buffer, int clientFd, const std::string& root)
 			close(clientFd);
 			return false;
         }
+
 		if (!checkMethod(this->firstLine[0]))
         {
             Response response(501, "");
@@ -222,6 +229,7 @@ bool Request::parse(char* buffer, int clientFd, const std::string& root)
 			return false;
         }
 		this->method = this->firstLine[0];
+
 		if (!checkPath(this->firstLine[1], root))
         { 
             Response response(404, "");
@@ -231,6 +239,7 @@ bool Request::parse(char* buffer, int clientFd, const std::string& root)
 			return false;
         }
 		this->path = this->firstLine[1];
+
 		if (!checkVersion(this->firstLine[2]))
         {
             Response response(505, "");
