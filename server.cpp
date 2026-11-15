@@ -13,6 +13,7 @@
 #include <cstdlib>	    // std::atoi
 #include "utils.hpp"    // split
 
+// Generate HTTP responses
 class Response
 {
 	public:
@@ -32,12 +33,6 @@ Response::Response(int statusCode, const std::string& body): statusCode(statusCo
 {
 }
 
-/*
-   status[200] = "Success";
-   status[300] = "Redirection";
-   status[400] = "Client Error";
-   status[500] = "Server error";
-*/
 std::string Response::getStatusText() const
 {
     if (this->statusCode == 200)
@@ -67,7 +62,6 @@ std::string Response::generate()
     ssSize << body.size();
 
     response += "HTTP/1.1 " + ss.str() + " " + getStatusText() + "\r\n";
-    //response += "Server: nrgi\r\n";
     response += "Content-Length: " + ssSize.str() + "\r\n";
     response += "Content-Type: " + headers["Content-Type"] + "\r\n";
     response += "\r\n";
@@ -76,60 +70,13 @@ std::string Response::generate()
     return response;
 }
 
-// Can use binary mode for all file types: .txt, .html, .css, .png, .jpg, .pdf
-bool readFile(const std::string& path, std::string& content)
-{
-    std::ifstream file(path.c_str(), std::ios::binary);
-
-    if (!file)
-        return false;
-
-    // Read the file buffer directly into a stringstream
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    if (!buffer)
-        return false;
-
-    // Store the stream content into a single string variable
-    content = buffer.str();
-
-    return true;
-}
-
-// Content-Type: HTML, CSS, JS, PNG, JPG, TXT
-std::string getContentType(const std::string& path)
-{
-    std::string::size_type pos = path.rfind('.');
-
-    if (pos == std::string::npos)
-        return "application/octet-stream";
-
-    std::string extension = path.substr(pos);
-
-    if (extension == ".html" || extension == ".htm")
-        return "text/html";
-    if (extension == ".css")
-        return "text/css";
-    if (extension == ".js")
-        return "text/javascript";
-    if (extension == ".txt")
-        return "text/plain";
-    if (extension == ".json")
-        return "application/json";
-    if (extension == ".png")
-        return "image/png";
-    if (extension == ".jpg" || extension == ".jpeg")
-        return "image/jpeg";
-    if (extension == ".gif")
-        return "image/gif";
-    if (extension == ".svg")
-        return "image/svg+xml";
-    if (extension == ".pdf")
-        return "application/pdf";
-
-    return "application/octet-stream";
-}
-
+// Parse incoming HTTP requests
+// client request:   
+//      GET / HTTP/1.1
+//		Host: localhost:8080
+//	    User-Agent: curl/7.81.0
+//	    Accept: */*
+//
 class Request
 {
 	public:
@@ -174,7 +121,7 @@ bool checkPath(const std::string& path, const std::string& root)
     // Handle directory
     if (S_ISDIR(fileInfo.st_mode))
     {
-        std::cout << globalPath << " is a directory" << std::endl;
+        std::cout << globalPath << " is a directory\n";
         return false;
     }
 
@@ -253,7 +200,7 @@ bool Request::parse(char* buffer, int clientFd, const std::string& root)
         // Request Headers
         for (size_t i = 1; i < headerLines.size(); i++)
         {
-            std::cout << "headerLines[" << i << "]: " << std::endl;
+            std::cout << "headerLines[" << i << "]: \n";
             std::vector<std::string> key_value = split(headerLines[i], ": ");
 
             if (key_value.size() < 2)
@@ -274,108 +221,138 @@ bool Request::parse(char* buffer, int clientFd, const std::string& root)
 
         // Request Body
         this->body = header_body[1];
-		std::cout << "request has been read successfully \n";
+		std::cout << "Request has been read successfully\n";
         return true;
 }
 
-
-bool checkFile(const std::string& hostPath)
+// Create sockets, accept clients, coordinate requests and responses
+class Server
 {
-	std::ifstream in_file(hostPath.c_str());
-	if (!in_file)
-	{
-		std::cout << "Error opening file " << hostPath << std::endl;
-		return false;
-	}
-	return true;
+    public:
+        int serverFd;
+        int port;
+        std::string root;
+
+        Server(int port, const std::string& root);
+        ~Server();
+        
+        bool setup();
+        void run();
+
+    // Prevent copying an object that owns a socket
+    private:
+        Server(const Server&);
+        Server& operator=(const Server&);
+};
+
+Server::Server(int port, const std::string& root): serverFd(-1), port(port), root(root)
+{
 }
 
-/*
-bool getStatus(Request req, Response& res)
+Server::~Server()
 {
-	// if the <host> is incorrect: 404 
-	if (!checkFile(req.path))
-	{
-		//std::cout << res.Header::status[2][0] << ": " << res.Header::status[2][1] << std::endl;
-	}
-	return true;
+    if (this->serverFd != -1)
+        close(this->serverFd);
 }
-*/
 
-int main(int argc, char *argv[])
+// socket -> bind -> listen
+bool Server::setup()
 {
-	if (argc != 2)
-	{
-		std::cerr << "usage: ./a.out <PORT>\n";
-		return 1;
-	}
-			     // ipv4 | 
-	int sock_fd = socket(PF_INET, SOCK_STREAM, 0); // create socket 
+    this->serverFd = socket(AF_INET, SOCK_STREAM, 0); // create socket
 
-	if (sock_fd == -1)
-	{
-		std::cerr << "Socket FAIL\n";
-		return 1;
-	}
+    if (this->serverFd == -1)
+    {
+        std::cerr << "Socket creation failed\n";
+        return false;
+    }
 
-	/* get from config file */
-	//Config conf("webserv.conf");
-	int port = -1;
-	port = std::atoi(argv[1]);
-
-	if (port < 0)
-	{
-		std::cout << "Error with port request\n";
-		return 1;
-	}
-
-	std::cout << "sock_fd: " << sock_fd << std::endl;
-	std::cout << "requested Port: " << port << std::endl;
-
-     // int bind(int socket, const struct sockaddr *address, socklen_t address_len);
-
+    // int bind(int socket, const struct sockaddr *address, socklen_t address_len);
 	struct sockaddr_in address;
-	address.sin_family = PF_INET;
-	address.sin_port = htons(port);
+	address.sin_family = AF_INET;
+	address.sin_port = htons(this->port);
 	address.sin_addr.s_addr = INADDR_ANY;
 
-	if (bind(sock_fd, reinterpret_cast<struct sockaddr *>(&address), sizeof(address)) == -1)
+	if (bind(this->serverFd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address)) == -1)
 	{
-		std::cerr << "Binding: error\n";
-		close(sock_fd);
-		return 1;
+		std::cerr << "Bind failed\n";
+		return false;
 	}
 
-	if (listen(sock_fd, SOMAXCONN) == -1)
+	if (listen(this->serverFd, SOMAXCONN) == -1)
 	{
-		std::cerr << "listen error\n";
-		close(sock_fd);
-		return 1;
+		std::cerr << "Listen failed\n";
+		return false;
 	}
 
-	std::cout << "Listening ...\n";
+	std::cout << "Listening on port:" << this->port << std::endl;
+    return true;
+}
 
-	//std::string macRoot = "/Users/regilliot/code/forty-two/webserv";
-	//std::string fortyTwoRoot = "/home/regillio/Desktop/webserv";
-	std::string macRoot = "/Users/chenyuchi/CommonCore/webserv";
-	std::string fortyTwoRoot = "/home/yucchen/CommonCore/webserv";
+// Can use binary mode for all file types: .txt, .html, .css, .png, .jpg, .pdf
+bool readFile(const std::string& path, std::string& content)
+{
+    std::ifstream file(path.c_str(), std::ios::binary);
+
+    if (!file)
+        return false;
+
+    // Read the file buffer directly into a stringstream
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    if (!buffer)
+        return false;
+
+    // Store the stream content into a single string variable
+    content = buffer.str();
+
+    return true;
+}
+
+// Content-Type: HTML, CSS, JS, PNG, JPG, TXT
+std::string getContentType(const std::string& path)
+{
+    std::string::size_type pos = path.rfind('.');
+
+    if (pos == std::string::npos)
+        return "application/octet-stream";
+
+    std::string extension = path.substr(pos);
+
+    if (extension == ".html" || extension == ".htm")
+        return "text/html";
+    if (extension == ".css")
+        return "text/css";
+    if (extension == ".js")
+        return "text/javascript";
+    if (extension == ".txt")
+        return "text/plain";
+    if (extension == ".json")
+        return "application/json";
+    if (extension == ".png")
+        return "image/png";
+    if (extension == ".jpg" || extension == ".jpeg")
+        return "image/jpeg";
+    if (extension == ".gif")
+        return "image/gif";
+    if (extension == ".svg")
+        return "image/svg+xml";
+    if (extension == ".pdf")
+        return "application/pdf";
+
+    return "application/octet-stream";
+}
+
+void Server::run()
+{
 	while (true)
 	{
-		int clientFd = accept(sock_fd, NULL, NULL);
+		int clientFd = accept(this->serverFd, NULL, NULL);
 		if (clientFd == -1)
 		{
-			std::cerr << "Error: client fd\n";
-			close(sock_fd);
-			return 1;
+			std::cerr << "Accept failed\n";
+            continue;
 		}
 
-//  Parse request
-//      client request:   
-//          GET / HTTP/1.1
-//		    Host: localhost:8080
-//	        User-Agent: curl/7.81.0
-//	        Accept: */*
-//
 		char buffer[1024]; 
 		ssize_t bytes_read = read(clientFd, buffer, sizeof(buffer) - 1); // read request 
 
@@ -387,7 +364,7 @@ int main(int argc, char *argv[])
 		}
 		else if (bytes_read == 0)
 		{
-			std::cout << "client closed connection" << std::endl;
+			std::cout << "client closed connection\n";
 			close(clientFd);
 			continue;
 		}
@@ -400,15 +377,17 @@ int main(int argc, char *argv[])
 
 		// check request buffer
 		Request request;
-        if (!request.parse(buffer, clientFd, macRoot))
+        if (!request.parse(buffer, clientFd, this->root))
             continue;
 
         std::string content;
-        std::string filePath = macRoot + request.path;
+        std::string filePath = this->root + request.path;
 
         if (!readFile(filePath, content))
         {
             Response response(404, "Not Found");
+            response.headers["Content-Type"] = "text/plain";
+
             std::string message = response.generate();
             write(clientFd, message.c_str(), message.size());
         }
@@ -420,41 +399,41 @@ int main(int argc, char *argv[])
             std::string message = response.generate();
             write(clientFd, message.c_str(), message.size());
         }
-        /*
-		std::string firstLine = "HTTP/1.1 200 OK\r\n";
-		std::ifstream imgfile("./cockpic.png");	
-		
-		FILE* file = fopen("./cockpic.png", "r");
-		
-		char filebuffer[40000];
 
-		ssize_t bytesRead = fread(filebuffer, 1, sizeof(filebuffer), file);
-		std::cout << "bytes read:" << bytesRead << std::endl;
-
-		//std::string body = "8==============================>\r\n";
-		std::string body;
-		body.resize(bytesRead);
-		for (int i = 0; i < bytesRead; i++)
-			body[i] = filebuffer[i];
-		//std::cout << "Body: " << body << std::endl;
-		std::string emptyLine = "\r\n"; 
-		//std::string contentDisp = "Content-Disposition: inline; filename='./cockpic.png'\r\n";
-
-		std::stringstream ss;
-		ss << body.size();
-
-		std::string contentLen = "Content-Length: " + ss.str() + "\r\n";
-		std::string contentType = "Content-Type: image/png\r\n";
-		//std::string contentType = "Content-Type: text/html\r\n";
-
-		std::string header = firstLine + contentLen + contentType + emptyLine;
-		write(clientFd, header.c_str(), header.size());
-		write(clientFd, body.c_str(), body.size());
-        */
 		close(clientFd);
-	}
-	close(sock_fd);
-	std::cout << "End\n";
+    }
+}
 
-	return 0;
+int main(int argc, char* argv[])
+{
+	if (argc != 2)
+	{
+		std::cerr << "Usage: ./webserv <port>\n";
+		return 1;
+	}
+
+	/* get from config file */
+	//Config conf("webserv.conf");
+	int port = std::atoi(argv[1]);
+
+	if (port <= 0 || port > 65535)
+	{
+		std::cerr << "Invalid port\n";
+		return 1;
+	}
+
+	//std::string macRoot = "/Users/regilliot/code/forty-two/webserv";
+	//std::string fortyTwoRoot = "/home/regillio/Desktop/webserv";
+    //std::string macRoot = "/Users/chenyuchi/CommonCore/webserv";
+	//std::string fortyTwoRoot = "/home/yucchen/CommonCore/webserv";
+    std::string root = "/home/yucchen/CommonCore/webserv";
+
+    Server server(port, root);
+
+    if (!server.setup())
+        return 1;
+
+    server.run();
+
+    return 0;
 }
