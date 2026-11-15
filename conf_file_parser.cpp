@@ -47,20 +47,76 @@ bool isWord(std::vector<std::string> &fileContent, const std::string& word)
 	}
 	return false;
 }
-
-void parser()
+class Config
 {
+	public:
+	//std::vector<std::map <std::string, std::string>> fileContent;
+	std::string file;
+	std::vector <std::pair <std::string, std::string>> keyValuePair;
+	std::string listenValue;
+	std::string addr;
+	int port;
+	std::string root;
+	std::string location;
+
+	Config(const std::string &filePath)
+	{
+		/*
+		this->keyValuePair; 
+		this->fileContent = parseConfigLine(filePath);	
+		this->listenValue = getValue(this->fileContent, "listen");
+		this->root = getValue(this->fileContent, "root");
+		this->location = getValue(this->fileContent, "location");
+		std::size_t findPort = this->listenValue.find(":");
+		if (findPort != std::string::npos)
+		{
+			this->addr = this->listenValue.substr(0, findPort);
+			this->port = std::atoi(this->listenValue.substr(findPort+1).c_str());
+		}
+		*/
+	}
+};
+
+template <typename T>
+class Expected
+{
+	private:
+	T Object;
+	bool hasValue;
+	std::string message;
+	public:
+	Expected(const Config& config)
+	{
+		if (this->hasValue == false)
+		{
+			this->message = "Error:";
+		}
+		else if (this->hasValue == true)
+		{
+			this->Object();
+		}
+	}
+};
+
+// the parser fill up the config object
+// the expected object contain the config object
+// the expected constructor take the config obj ref as a parameter
+// during the parsing pass it is trying to fill the config attributes
+Expected<std::string> parser(Config &config)
+{
+	Expected <std::string>expectedConfig(config);
+
 	/* PARTS */
 	std::string general = "--//GENERAL//--";;
 	std::string server = "--//SERVER//--";;
 
-	int partsName = 2;
+	int parts = 2;
 	std::vector<std::string>partWords;
 	partWords.push_back(general);
 	partWords.push_back(server);
 
 	/* GENERAL VARS */
-	int partsVars = 4;
+	int mainVars = 4;
 	std::string user = "user";
 	std::string root = "root";
 
@@ -69,7 +125,6 @@ void parser()
 	std::string errorPagePath = linuxPath + "errorPage/";
 
 	/* SERVER VARS */
-
 	int serverVars = 2;
 
 	/* KEYS */
@@ -88,12 +143,18 @@ void parser()
 	std::vector<std::string>fileContent;
 	std::string fileWord;
 	std::ifstream file("webserv.mac.conf");
+	/* reading the file word by word (`>>` split on spaces) */
 	while (file >> fileWord)
 	{
 		fileContent.push_back(fileWord);
 	}
 	bool isGeneral = isWord(fileContent, general);
-
+	if (isGeneral == false)
+	{
+		std::cout << "Error: Main context not found\n";
+		return Expected<T>("Main context not found\n");
+	}
+	return Expected<T>(config);
 }
 
 void printParsedFile(std::vector <std::map <std::string, std::string>> &linesKeyValue)
@@ -122,35 +183,14 @@ std::string getValue(std::vector <std::map <std::string, std::string>> &linesKey
 }
 
 
-class Config
-{
-	public:
-	std::vector<std::map <std::string, std::string>> fileContent;
-	std::string listenValue;
-	std::string addr;
-	int port;
-	std::string root;
-	std::string location;
-
-	Config(const std::string &filePath)
-	{
-		this->fileContent = parseConfigLine(filePath);	
-		this->listenValue = getValue(this->fileContent, "listen");
-		this->root = getValue(this->fileContent, "root");
-		this->location = getValue(this->fileContent, "location");
-		std::size_t findPort = this->listenValue.find(":");
-		if (findPort != std::string::npos)
-		{
-			this->addr = this->listenValue.substr(0, findPort);
-			this->port = std::atoi(this->listenValue.substr(findPort+1).c_str());
-		}
-	}
-
-};
-
 int main(int argc, const char *argv[])
 {
-	parser();
+	Config config("webserv.mac.conf");
+	Expected<std::string> expectedConfig(config);
+	general = parser();
+
+	//general = parser();
+
 	return 0;
 	if (argc != 2)
 	{
