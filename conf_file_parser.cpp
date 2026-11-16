@@ -77,25 +77,31 @@ class Config
 	}
 };
 
+
+Expected<std::string>("") _r;
+_r.hasValue = false;
+if //(my file don't exists) 
+    _r.message = "The file don't exists";
+else if //(parse failed)
+    _r.message = "The parsing failed";
+
+else //(everything went as expected)
+    _r.hasValue = true; //(also, it should be success and not hasValue, because it can succeed even without having any value)
+    _r.value = //(whatever you want to return);
+    return _r;
+
 template <typename T>
 class Expected
 {
 	private:
-	T Object;
-	bool hasValue;
-	std::string message;
+		T Object;
+		bool hasValue;
+		std::string message;
 	public:
-	Expected(const Config& config)
-	{
-		if (this->hasValue == false)
+		Expected<std::string>()(const Config& config)
 		{
-			this->message = "Error:";
+			
 		}
-		else if (this->hasValue == true)
-		{
-			this->Object();
-		}
-	}
 };
 
 // the parser fill up the config object
@@ -187,7 +193,7 @@ int main(int argc, const char *argv[])
 {
 	Config config("webserv.mac.conf");
 	Expected<std::string> expectedConfig(config);
-	general = parser();
+	config = parser();
 
 	//general = parser();
 
