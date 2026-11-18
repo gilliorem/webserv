@@ -1,3 +1,4 @@
+#include <sstream>
 #include <iostream>
 #include <fstream>
 #include <cstdio>
@@ -36,10 +37,8 @@ std::vector<std::map<std::string, std::string>> parseConfigLine(const std::strin
 	return linesKeyValue;
 }
 
-
 bool isWord(std::vector<std::string> &fileContent, const std::string& word)
 {
-
 	for (std::vector<std::string>::iterator it = fileContent.begin(); it != fileContent.end(); it++)
 	{
 		if (*it == word)
@@ -47,21 +46,72 @@ bool isWord(std::vector<std::string> &fileContent, const std::string& word)
 	}
 	return false;
 }
+
 class Config
 {
 	public:
-	//std::vector<std::map <std::string, std::string>> fileContent;
-	std::string file;
+	std::vector<std::string> lines;
+	std::vector<std::string> firstLine;
 	std::vector <std::pair <std::string, std::string>> keyValuePair;
+	
 	std::string listenValue;
 	std::string addr;
 	int port;
 	std::string root;
 	std::string location;
 
+	void getLines(const std::string& filePath)
+	{
+		std::ifstream file(filePath);	
+		std::string line;
+		while (std::getline(file, line))
+		{
+			lines.push_back(line);
+		}
+	}
+	bool parseFirstLine()
+	{
+		std::istringstream iss(lines[0]);
+		std::string word;
+		int wordCount = 0;
+		while (iss >> word)
+		{
+			firstLine.push_back(word);
+			wordCount ++;
+		}
+		if (wordCount != 2)
+		{
+			std::cout << "Error parsing first line: incorrect number of words.\n";
+			return false;
+		}
+		std::cout << "trimed first line: ";
+		for (auto it: firstLine)
+			std::cout << it;
+		if (firstLine[0] != "error_404")
+		{
+			std::cout << "Error parsing first line: incorrect error key\n";
+			return false;
+		}
+		this->keyValuePair.push_back(std::make_pair(firstLine[0], firstLine[1]));
+		std::cout << "first line pair:" << firstLine[0] << firstLine[1] << std::endl;
+		// check error page file		
+		return true;
+	}
+	bool parseMainContext()
+	{
+		if (parseFirstLine() == false)
+			return false;
+		return true;
+	}
+	Config(const std::string& filePath)
+	{
+		getLines(filePath);
+		parseMainContext();
+	}
+
+	/*
 	Config(const std::string &filePath)
 	{
-		/*
 		this->keyValuePair; 
 		this->fileContent = parseConfigLine(filePath);	
 		this->listenValue = getValue(this->fileContent, "listen");
@@ -73,58 +123,27 @@ class Config
 			this->addr = this->listenValue.substr(0, findPort);
 			this->port = std::atoi(this->listenValue.substr(findPort+1).c_str());
 		}
-		*/
 	}
+	*/
 };
 
-
-Expected<std::string>("") _r;
-_r.hasValue = false;
-if //(my file don't exists) 
-    _r.message = "The file don't exists";
-else if //(parse failed)
-    _r.message = "The parsing failed";
-
-else //(everything went as expected)
-    _r.hasValue = true; //(also, it should be success and not hasValue, because it can succeed even without having any value)
-    _r.value = //(whatever you want to return);
-    return _r;
-
-template <typename T>
-class Expected
+bool parser(Config& conf)
 {
-	private:
-		T Object;
-		bool hasValue;
-		std::string message;
-	public:
-		Expected<std::string>()(const Config& config)
-		{
-			
-		}
-};
-
-// the parser fill up the config object
-// the expected object contain the config object
-// the expected constructor take the config obj ref as a parameter
-// during the parsing pass it is trying to fill the config attributes
-Expected<std::string> parser(Config &config)
-{
-	Expected <std::string>expectedConfig(config);
+	//Expected <std::string>expectedConfig(config);
+	bool error = false;
 
 	/* PARTS */
-	std::string general = "--//GENERAL//--";;
-	std::string server = "--//SERVER//--";;
+	std::string serverBeg = "--//SERVER_BEGIN//--";;
+	std::string serverEnd = "--//SERVER_END//--";;
 
 	int parts = 2;
 	std::vector<std::string>partWords;
-	partWords.push_back(general);
-	partWords.push_back(server);
+	partWords.push_back(serverBeg);
+	partWords.push_back(serverEnd);
 
 	/* GENERAL VARS */
-	int mainVars = 4;
-	std::string user = "user";
-	std::string root = "root";
+	int mainVars = 3;
+	std::string error_page = "error_404";
 
 	std::string macPath = "/Users/regilliot/code/forty_two/webserv/www/";
 	std::string linuxPath = "/home/regillio/Desktop/webserv/www/";
@@ -154,13 +173,17 @@ Expected<std::string> parser(Config &config)
 	{
 		fileContent.push_back(fileWord);
 	}
-	bool isGeneral = isWord(fileContent, general);
-	if (isGeneral == false)
+	//parseMainContext();
+	bool isServerBeg = isWord(fileContent, serverBeg);
+	bool isServerEnd = isWord(fileContent, serverEnd);
+	if (isServerBeg == false)
 	{
 		std::cout << "Error: Main context not found\n";
-		return Expected<T>("Main context not found\n");
+		return false;
+		//return Expected<T>("Main context not found\n");
 	}
-	return Expected<T>(config);
+	return true;
+	//return Expected<T>(config);
 }
 
 void printParsedFile(std::vector <std::map <std::string, std::string>> &linesKeyValue)
@@ -192,8 +215,7 @@ std::string getValue(std::vector <std::map <std::string, std::string>> &linesKey
 int main(int argc, const char *argv[])
 {
 	Config config("webserv.mac.conf");
-	Expected<std::string> expectedConfig(config);
-	config = parser();
+
 
 	//general = parser();
 
