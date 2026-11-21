@@ -33,6 +33,21 @@ Every time `iss >> word` executes:
 ## Constructor and static
 
 
+## Making a constructor private
+
+
+## Class member function calling the constructor
+
+```c++
+auto res = ConfigParser::parse("server.conf");
+if (!res.is_success()) {
+    std::cerr << "Error parsing configuration: " << res.error() << std::endl;
+    return 1;
+}
+auto config = res.value();
+```
+
+the statement above implies that we have an `Expected` class
 
 ## Handle error by returning infomation to the caller: `Expected` (`std::expected`)
 
@@ -44,13 +59,34 @@ To return both our object and the error detailed we need a class that carries 2 
 template <typename T>
 class Expected
 {
+    private:
     T value;
     bool hasValue = false;
     std::string message = "";
     
-    Expected(const std::string& msg)
+    public:
+    Expected(const std::string& msg) {}
 }
 ```
+
+## Expected having a private Constructor
+
+
+
+## Expected having static methods that instantiate the class
+
+*In case we fail, we instantiate the object Expected and we pass the literal error message*
+*In success case, we instantiate the Expected object and we pass an empty string error and the Value must be the Config instance*
+
+```c++
+static Expected success()
+{
+    return Expected:
+}
+static Expected failure () 
+```
+
+
 ## Git Version control
 
 Initial scenario: (Happening on PC)

@@ -47,22 +47,12 @@ bool isWord(std::vector<std::string> &fileContent, const std::string& word)
 	return false;
 }
 
-// Source - https://stackoverflow.com/q/216823
-// Posted by Milan Babuškov, modified by community. See post 'Timeline' for change history
-// Retrieved 2026-11-19, License - CC BY-SA 4.0
-
-/*
-void trim (std::string&)
-std::string s;
-s.erase(s.find_last_not_of(" \n\r\t") + 1);
-*/
-
-
 class Config
 {
 	public:
 	std::vector<std::string> lines;
 	std::vector<std::string> firstLine;
+	std::string secondLine;
 	std::vector <std::pair <std::string, std::string>> keyValuePair;
 	
 	std::string listenValue;
@@ -119,20 +109,26 @@ class Config
 			return false;
 		return true;
 	}
-	/*
 	bool parseSecondLine()
 	{
 		std::cout << "second line: " << this->lines[1];
-		this->secondLine 
+		this->secondLine = this->lines[1];
 
 		return true;
 	}
-	*/
+	Config() {}
+	static bool parser(const std::string& filePath)
+	{
+		Config();
+		return true;
+	}
+	/*
 	Config(const std::string& filePath)
 	{
 		getLines(filePath);
 		parseMainContext();
 	}
+	*/
 
 	/*
 	Config(const std::string &filePath)
@@ -239,87 +235,6 @@ std::string getValue(std::vector <std::map <std::string, std::string>> &linesKey
 
 int main(int argc, const char *argv[])
 {
-	//Config config("webserv.mac.conf");
-	Config config("webserv.conf");
-
-
-	//general = parser();
-
-	return 0;
-	if (argc != 2)
-	{
-		// can also use a default config file if no conf file has been provide.
-		std::cout << "need to provide config file\n";
-		return 1;
-	}
-	/*
-	std::map <std::string, std::string> keyValue;
-	keyValue["key"] = "value";
-	linesKeyValue.push_back(keyValue);
-	*/
-
-	std::string filePath = argv[1];
-	
-	Config c(filePath);
-	std::cout << c.listenValue << std::endl;
-	return 0;
-	std::cout << c.addr << std::endl;
-	std::cout << c.port << std::endl;
-	std::cout << c.root << std::endl;
-	std::cout << c.location << std::endl;
-
-	return 0;
-
-	/*
-
-	Config conf("webserv.conf");
-
-	return 0;
-	std::string fileLine;
-	std::vector<std::string> fileContent;
-	//std::cin >> fileContent;
-	std::ifstream file("webserv.conf");
-	while (file >> fileLine)
-	{
-		fileContent.push_back(fileLine);
-	}
-	for (std::vector<std::string>::iterator it = fileContent.begin(); it != fileContent.end(); ++it)
-		std::cout << *it << std::endl;
-
-	//std::cout << "file content: \n" << fileContent;
-	file.close();
-
-	return 0;
-	FILE * pFile;
-	long lSize;
-	char * buffer;
-	size_t bytesRead;
-
-	pFile = std::fopen("webserv.conf", "r");
-	if (!pFile) {std::cout << "error opening file"; return 1;}
-
- 	fseek(pFile, 0, SEEK_END);
-
-	lSize = ftell(pFile);
-	//std::cout << "l size:" << lSize << std::endl;
-	rewind (pFile);
-
-
-	// size_t fread ( void * ptr, size_t size, size_t count, FILE * stream ); 
-	// say we have the size file before reading
-
-	buffer = (char*)malloc(sizeof(lSize));
-	bytesRead = fread(buffer,1,lSize,pFile);
-	std::cout << "bytes read:" << bytesRead << std::endl;
-	std::cout << "l size:" << lSize << std::endl;
-
-	if (bytesRead != lSize)
-	{std::cout << "Error reading file\n"; return 1;}
-
-	std::cout << "file content: \n" << buffer << std::endl;
-	fclose(pFile);
-	free(buffer);
-	return 0;
-	*/
-
+	//Config conf;
+	Config::parser("webserv.conf");
 }
