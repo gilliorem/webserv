@@ -70,10 +70,8 @@ Once I've made those changes, I can now merge: keep one version locally of the `
 
 There are two other files that I've made modifications on my MAC I do want to pull from the orgin/main `.gitignore` and `patterns.md`
 I want to merge the files that I havent modified locally and keep the PC version for the file that has been modified both in origin and locally:
-`git merge --no-commit -X ours origin/main` : 
-we merge in order to get the last version of the .gitignore and the patterns.md file.
-we don't want to commit the merge because we are not done with `conf_file_parser.cpp`
-`-X ours origin/main` is for git to know that if there is a conflict on a file we keep the local version and if there is no conflict, the origin can add up
+`git merge`:
+solve conflict (modifying the temp file)
 
 `git checkout HEAD -- conf_file_parser.cpp` is for us to keep only the local part and whipeout the mac changes.
 
