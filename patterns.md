@@ -29,3 +29,25 @@ Every time `iss >> word` executes:
 - `iss` extracts every char into `word` until the next whitespace
 - `iss` remember where it stops for later `is >> word` iteration.
 
+
+## Constructor and static
+
+
+
+## Handle error by returning infomation to the caller: `Expected` (`std::expected`)
+
+A classic parser will return a boolean value to indicate the parsing fail or succeed.
+in the parser there are multiples ways the checks can fail. With a strict type `bool`, we miss the reason it failed.
+
+To return both our object and the error detailed we need a class that carries 2 information:
+```c++
+template <typename T>
+class Expected
+{
+    T value;
+    bool hasValue = false;
+    std::string message = "";
+    
+    Expected(const std::string& msg)
+}
+```
