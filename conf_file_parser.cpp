@@ -47,6 +47,17 @@ bool isWord(std::vector<std::string> &fileContent, const std::string& word)
 	return false;
 }
 
+// Source - https://stackoverflow.com/q/216823
+// Posted by Milan Babuškov, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-11-19, License - CC BY-SA 4.0
+
+/*
+void trim (std::string&)
+std::string s;
+s.erase(s.find_last_not_of(" \n\r\t") + 1);
+*/
+
+
 class Config
 {
 	public:
@@ -71,29 +82,34 @@ class Config
 	}
 	bool parseFirstLine()
 	{
+		std::cout << "First line: " << lines[0] << std::endl;
+		/* split by spaces */
 		std::istringstream iss(lines[0]);
 		std::string word;
 		int wordCount = 0;
 		while (iss >> word)
 		{
-			firstLine.push_back(word);
+			std::cout << "word: " << word << std::endl;
 			wordCount ++;
+			firstLine.push_back(word);
 		}
 		if (wordCount != 2)
 		{
 			std::cout << "Error parsing first line: incorrect number of words.\n";
+			std::cout << "Word count: " << wordCount << std::endl;
 			return false;
 		}
 		std::cout << "trimed first line: ";
 		for (auto it: firstLine)
 			std::cout << it;
+		std::cout << std::endl;
 		if (firstLine[0] != "error_404")
 		{
 			std::cout << "Error parsing first line: incorrect error key\n";
 			return false;
 		}
 		this->keyValuePair.push_back(std::make_pair(firstLine[0], firstLine[1]));
-		std::cout << "first line pair:" << firstLine[0] << firstLine[1] << std::endl;
+		std::cout << "first line pair:" << std::endl << "key: " << firstLine[0] << std::endl << "value: " << firstLine[1] << std::endl;
 		// check error page file		
 		return true;
 	}
@@ -103,6 +119,15 @@ class Config
 			return false;
 		return true;
 	}
+	/*
+	bool parseSecondLine()
+	{
+		std::cout << "second line: " << this->lines[1];
+		this->secondLine 
+
+		return true;
+	}
+	*/
 	Config(const std::string& filePath)
 	{
 		getLines(filePath);
@@ -214,7 +239,8 @@ std::string getValue(std::vector <std::map <std::string, std::string>> &linesKey
 
 int main(int argc, const char *argv[])
 {
-	Config config("webserv.mac.conf");
+	//Config config("webserv.mac.conf");
+	Config config("webserv.conf");
 
 
 	//general = parser();

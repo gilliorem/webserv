@@ -162,40 +162,40 @@ bool Request::parse(char* buffer, int clientFd, const std::string& root)
         {
             Response response(400, "");
             std::string message = response.generate();
-            write(clientFd, message.c_str(), message.size());
-			close(clientFd);
-			return false;
+	    write(clientFd, message.c_str(), message.size()); // should not be here (not responsible for handling error case)
+	    close(clientFd);
+	    return false;
         }
 
-		if (!checkMethod(this->firstLine[0]))
+	if (!checkMethod(this->firstLine[0]))
         {
             Response response(501, "");
             std::string message = response.generate();
             write(clientFd, message.c_str(), message.size());
-			close(clientFd);
-			return false;
+	    close(clientFd);
+	    return false;
         }
-		this->method = this->firstLine[0];
+	this->method = this->firstLine[0];
 
-		if (!checkPath(this->firstLine[1], root))
+	if (!checkPath(this->firstLine[1], root))
         { 
             Response response(404, "");
             std::string message = response.generate();
             write(clientFd, message.c_str(), message.size());
-			close(clientFd);
-			return false;
+	    close(clientFd);
+	    return false;
         }
-		this->path = this->firstLine[1];
+	this->path = this->firstLine[1];
 
-		if (!checkVersion(this->firstLine[2]))
+	if (!checkVersion(this->firstLine[2]))
         {
             Response response(505, "");
             std::string message = response.generate();
             write(clientFd, message.c_str(), message.size());
-			close(clientFd);
-			return false;
+	    close(clientFd);
+	    return false;
         }
-		this->version = this->firstLine[2];
+	this->version = this->firstLine[2];
 
         // Request Headers
         for (size_t i = 1; i < headerLines.size(); i++)
@@ -423,10 +423,10 @@ int main(int argc, char* argv[])
 	}
 
 	//std::string macRoot = "/Users/regilliot/code/forty-two/webserv";
-	//std::string fortyTwoRoot = "/home/regillio/Desktop/webserv";
+	std::string root = "/home/regillio/Desktop/webserv";
     //std::string macRoot = "/Users/chenyuchi/CommonCore/webserv";
 	//std::string fortyTwoRoot = "/home/yucchen/CommonCore/webserv";
-    std::string root = "/home/yucchen/CommonCore/webserv";
+    //std::string root = "/home/yucchen/CommonCore/webserv";
 
     Server server(port, root);
 
