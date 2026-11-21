@@ -103,11 +103,13 @@ class Config
 			return false;
 		return true;
 	}
-	Config(const std::string& filePath)
+	bool parse(const std::string& filePath) // can return an expected obj with either error or the Expected obj containing Conf
 	{
 		getLines(filePath);
-		parseMainContext();
+		parseMainContext(); 
+		return true;
 	}
+	Config() {}
 
 	/*
 	Config(const std::string &filePath)
@@ -214,7 +216,9 @@ std::string getValue(std::vector <std::map <std::string, std::string>> &linesKey
 
 int main(int argc, const char *argv[])
 {
-	Config config("webserv.mac.conf");
+	Config config;
+	//parse(config);
+	//Config config("webserv.mac.conf");
 
 
 	//general = parser();
