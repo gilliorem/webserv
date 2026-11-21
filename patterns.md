@@ -51,3 +51,30 @@ class Expected
     Expected(const std::string& msg)
 }
 ```
+## Git Version control
+
+Initial scenario: (Happening on PC)
+I've written some changes in `conf_file_parser.cpp` in my PC. I *didn't push*.
+I've written some changes in `conf_file_parser.cpp` in my MAC. I *pushed*.
+I've realized that the version of the file that I want is the *PC* .
+
+==> I have a *conflict* *I can't push nor pull from PC*
+I can't `git pull` because I have uncomitted local changes that would be overwritten by origin/main (upstream branch(github))
+I can't `git push` because the origin/main has a newer commit that the local PC doesn't have.
+
+I need to commit all the uncommited files, so *git won't block the merge*
+`git add -A && git commit -m "Save PC changes"` 
+I run `git fetch origin` : (fetch will download the `parser.cpp` present in origin/main in the `.git`): *preserving the local files*
+I will need to merge (go over each file version(MAC|PC)) and chose what change I want to go with.
+Once I've made those changes, I can now merge: keep one version locally of the `conf_file_parser.cpp` (at this point, local and upstream is the same version)
+
+There are two other files that I've made modifications on my MAC I do want to pull from the orgin/main `.gitignore` and `patterns.md`
+I want to merge the files that I havent modified locally and keep the PC version for the file that has been modified both in origin and locally:
+`git merge --no-commit -X ours origin/main` : 
+we merge in order to get the last version of the .gitignore and the patterns.md file.
+we don't want to commit the merge because we are not done with `conf_file_parser.cpp`
+`-X ours origin/main` is for git to know that if there is a conflict on a file we keep the local version and if there is no conflict, the origin can add up
+
+`git checkout HEAD -- conf_file_parser.cpp` is for us to keep only the local part and whipeout the mac changes.
+
+`finally we need to commit push`
