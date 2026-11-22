@@ -2,17 +2,6 @@
 
 logic or programming patterns discovered while working on webserv.
 
-Logs of the logical errors | assumptions made about concepts
-what I did wrong
-where was my understanding faulty
-the fix
-the general rule out of this.
-
-
-- Have to split word by word
-Assumption:
-it helps us ignore the whitespaces
-
 ## Process a string word by word
 `std::string strToBeProcessed`
 Key line:
@@ -28,6 +17,15 @@ Every time `iss >> word` executes:
 - `iss` advances the read cursor until the next whitespace
 - `iss` extracts every char into `word` until the next whitespace
 - `iss` remember where it stops for later `is >> word` iteration.
+
+## Split line by line
+
+`std::string dataToProcess`
+`std::string line`
+using `std::ifstream file` or `std::string str`
+whether it's a file or a string, we need to pipe it in a stream so that getline can process it.
+`std::istringstream stream(dataToProcess)`
+`while std::getline(stream, line)`
 
 
 ## Constructor and static
