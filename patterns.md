@@ -70,12 +70,10 @@ class Expected
 ```
 
 ## Expected having a private Constructor
-
-
+as the object will be instantiate on `Expected::fail()` or `Expected::success()` calls
 
 ## Expected having static methods that instantiate the class
-
-*In case we fail, we instantiate the object Expected and we pass the literal error message*
+*In fail case, we instantiate the object Expected and we pass the literal error message*
 *In success case, we instantiate the Expected object and we pass an empty string error and the Value must be the Config instance*
 
 ```c++

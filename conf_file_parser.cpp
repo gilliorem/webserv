@@ -47,6 +47,19 @@ bool isWord(std::vector<std::string> &fileContent, const std::string& word)
 	return false;
 }
 
+template<typename T>
+class Expected
+{
+	private:
+		std::string _message;
+		T _value;
+		bool _hasValue;
+		Expected(){}
+	public:
+		
+
+};
+
 class Config
 {
 	public:
@@ -117,18 +130,10 @@ class Config
 		return true;
 	}
 	Config() {}
-	static bool parser(const std::string& filePath)
+	Expected<Config> parser()
 	{
-		Config();
-		return true;
+
 	}
-	/*
-	Config(const std::string& filePath)
-	{
-		getLines(filePath);
-		parseMainContext();
-	}
-	*/
 
 	/*
 	Config(const std::string &filePath)
