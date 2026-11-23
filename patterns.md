@@ -27,64 +27,54 @@ whether it's a file or a string, we need to pipe it in a stream so that getline 
 `std::istringstream stream(dataToProcess)`
 `while std::getline(stream, line)`
 
+## The `Expected` class
+The Expected class has a private constructor because it is its member functions that will instantiate the class. this is the constructor signature:
+`Expected(const T& v, const std::string& msg, bool hasValue)`
+The Expected constructor will construct a T. The first arugment has to be a const referene to that T v object in order to able to construct it and have it as a reference like the message. 
+Later the sucess function will construct as follow:
+`static Expected success(const T& v) { return Expected(v, "", true); }`
+`static Expected fail(const std::string& errorMsg) { return Expected(T(), errorMsg, false); }`
 
-## Constructor and static
-
-
-## Making a constructor private
-
-
-## Class member function calling the constructor
-
+parser call:
 ```c++
-auto res = ConfigParser::parse("server.conf");
+Expected parser()
+{
+	lines = getlines();
+	if (lines.size() < 3)
+		return Expected::fail("Error: conf file missing line")
+	
+	findColon = std::string::find.lines[1](":");
+	port = std::atoi(lines[1].substr(findColon));	
+	return Expected::success(Conf(port, lines[2]))
+}
+```
+## Having getters in the Expected class
+I first thought that having getters in the Expected class was useless as we are setting the values in the member functions `success()` and `fail()`. WRONG.
+We need getters for our caller: the `main()` will need to check if the Expected values are correct, and it will need the port, the location.
+
+main call:
+```c++
+Expected<Conf> res parse(argv[1]);
+if (!res.success())
+{
+	std::cerr << res.error();
+	return 1;
+}
+const Config& cfg = res.value();
+std::cout << "Port: " << cfg.getPort() << "Location: " << cfg.getLocation() << std::endl;
+```
+Another main call:
+```c++
+auto res = ConfigParser::parse("server.conf") -> Expected<Conf>;
 if (!res.is_success()) {
     std::cerr << "Error parsing configuration: " << res.error() << std::endl;
     return 1;
 }
-auto config = res.value();
-```
-
-the statement above implies that we have an `Expected` class
-
-## Handle error by returning infomation to the caller: `Expected` (`std::expected`)
-
-A classic parser will return a boolean value to indicate the parsing fail or succeed.
-in the parser there are multiples ways the checks can fail. With a strict type `bool`, we miss the reason it failed.
-
-To return both our object and the error detailed we need a class that carries 2 information:
-```c++
-template <typename T>
-class Expected
-{
-    private:
-    T value;
-    bool hasValue = false;
-    std::string message = "";
-    
-    public:
-    Expected(const std::string& msg) {}
-}
-```
-
-## Expected having a private Constructor
-as the object will be instantiate on `Expected::fail()` or `Expected::success()` calls
-
-## Expected having static methods that instantiate the class
-*In fail case, we instantiate the object Expected and we pass the literal error message*
-*In success case, we instantiate the Expected object and we pass an empty string error and the Value must be the Config instance*
-
-```c++
-static Expected success()
-{
-    return Expected:
-}
-static Expected failure () 
+auto config = res.value() -> Conf;
 ```
 
 
 ## Git Version control
-
 Initial scenario: (Happening on PC)
 I've written some changes in `conf_file_parser.cpp` in my PC. I *didn't push*.
 I've written some changes in `conf_file_parser.cpp` in my MAC. I *pushed*.
