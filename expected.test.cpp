@@ -23,7 +23,8 @@ class Expected
 	std::string message;
 	T Object;
 	Expected(const std::string& message){
-		if (this->hasValue == false){
+		if (this->hasValue == false)
+		{
 			this->message = "Error:";
 		} 
 		else

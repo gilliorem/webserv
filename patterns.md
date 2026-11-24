@@ -25,7 +25,7 @@ Every time `iss >> word` executes:
 using `std::ifstream file` or `std::string str`
 whether it's a file or a string, we need to pipe it in a stream so that getline can process it.
 `std::istringstream stream(dataToProcess)`
-`while std::getline(stream, line)`
+`while std::getline(stream, line)` this version of getline does not include the newline at the end. (the C POSIX `getline` version does.)
 
 ## The `Expected` class
 The Expected class has a private constructor because it is its member functions that will instantiate the class. this is the constructor signature:
