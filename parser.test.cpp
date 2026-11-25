@@ -87,7 +87,7 @@ class Listen
         std::string addr;
         std::string portStr;
 
-        Listen():pair(0), key(""), value(""), addr(""), portStr("") { }
+        Listen():pair(0), key(""), value(""), addr("localhost"), portStr("80") { }
         static Expected<Listen> parser(const std::string &listenLine)
         {
             std::string listenKey = "";
@@ -152,7 +152,7 @@ class Config
                     std::cout << "Lstn value: " << lstn.value << std::endl;
                     std::cout << "Lstn port addr: " << lstn.addr << std::endl;
                     std::cout << "Lstn port number: " << lstn.portStr << std::endl;
-                    if (lstn.portStr)
+                    //if (lstn.portStr)
                     break;
                 }
             }
