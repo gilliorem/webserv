@@ -73,6 +73,20 @@ if (!res.is_success()) {
 auto config = res.value() -> Conf;
 ```
 
+## THE BARE MINIMUM CONFIG TO RUN A WEBSERV
+For a server to run it just needs two elements (lines):
+`listen 80` the port to listen to.
+`root /var/www/` : the base filestystem
+
+Without a port, the OS can't create the listening socket.
+
+
+## THE COMPILE TIME RUN TIME ANALOGY
+Parsing the config file can be seen as the compile time.
+Starting the server loop using Config attributes can be seen as the runtime.
+Startup / Configuration Phase: The program starts, reads webserv.conf, parses text into C++ objects, validates syntax, and builds your Config class. 
+
+Runtime Phase (Runs forever until Ctrl+C): Once the configuration is loaded, the program enters its main while (running) loop. During this phase, the program reacts to live external events: new TCP connections, incoming HTTP bytes, CGI processes finishing, and socket write-readiness.
 
 ## Git Version control
 Initial scenario: (Happening on PC)

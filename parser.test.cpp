@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cctype>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -77,6 +79,18 @@ class Expected
 //   parse listenValue
 //    parse port
 
+bool isDigitOnly(const std::string& str)
+{
+    if (str.empty()) return false;
+    for (std::string::const_iterator it = str.begin(); it != str.end(); ++it)
+    {
+        unsigned c = static_cast<unsigned char>(*it);
+        if (!std::isdigit(c))
+            return false;
+    }
+    return true;
+}
+
 class Listen 
 {
     public:
@@ -152,41 +166,15 @@ class Config
                     std::cout << "Lstn value: " << lstn.value << std::endl;
                     std::cout << "Lstn port addr: " << lstn.addr << std::endl;
                     std::cout << "Lstn port number: " << lstn.portStr << std::endl;
-                    //if (lstn.portStr)
+                    
+                    if (!isDigitOnly(lstn.portStr))
+                        return Expected<Config>::fail("Port number non-all digits");
+                    if (stoi(lstn.portStr) < 0 || stoi(lstn.portStr)> 49152)
+                        return Expected<Config>::fail("Port number is out of range");
+                    pPort = stoi(lstn.portStr);
                     break;
                 }
             }
-           // std::cout << "listen line: " << it[0] << std::endl;
-           // std::string listenLine = it[0];
-           // std::vector<std::string> listenPair = getWords(listenLine);
-           // std::string listenKey = listenPair[0];
-           // std::string listenValue = listenPair[1];
-           // std::cout << listenValue << std::endl; 
-
-            // localhost:8080 // 8080 // localhost // 127.0.0.1:8765 // 
-            // addr + port
-            // port
-            // *:8080 // (which means 0.0.0.0:8080 // which means all ips can reach this server.)
-            
-           // if (std::stoi(listenValue) > 1023 && std::stoi(listenValue) < 49152)
-           //     pPort = std::stoi(listenValue);
-           // else if (std::stoi(listenValue) < 1023 && std::stoi(listenValue) > 0)
-           //     return Expected<Config>::fail("Error: This port number is not authorized. Who are you ?");
-           // else if (std::stoi(listenValue) < 0)
-           //     return Expected<Config>::fail("Error: This port number is not in a valid range.");
-
-           //     else if ((*it).find("listen") == std::string::npos)
-           //         return Expected<Config>::fail("Missing listen key word");
-           //     
-           //     if ((*it).find("location") == std::string::npos)
-           //         return Expected<Config>::fail("Error: location key word is missing");
-           //     else
-           //         std::cout << "*it containing location: " << *it << std::endl;
-           //     if (pPort == -1)
-           //     {
-           //         return Expected<Config>::fail("Invalid port number");
-           //     }
-           // }
             Config cfg;
             cfg._port = pPort;
             cfg._location = pLocation;
