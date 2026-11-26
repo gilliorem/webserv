@@ -79,6 +79,7 @@ For a server to run it just needs two elements (lines):
 `root /var/www/` : the base filestystem
 
 Without a port, the OS can't create the listening socket.
+Without a base filesystem, the program doesnt not know what file read
 
 
 ## THE COMPILE TIME RUN TIME ANALOGY

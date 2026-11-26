@@ -134,20 +134,42 @@ class Listen
 
 class Config
 {
+	public:
+		std::string errorLine;
+		std::string rootLine;
+		std::string serverBeginLine;
+		std::string serverEndLine;
+		std::string listenLine;
+		std::string locationLine;
+
+		Config():errorLine(""), rootLine(""), serverBeginLine(""), serverEndLine("") {  }
+		static Expected<Config> parseConfig(const std::string& filePath)
+		{
+
+
+			
+			Config cfg;
+			return Expected<Config>::success(cfg);
+		}
+};
+
+class ServerConfig
+{
     private:
         int _port;
         std::string _location;
+		std::string _root;
     public:
-        Config():_port(0), _location(""){ }
+        ServerConfig():_port(0), _location(""){ }
         int port() { return this->_port; }
         std::string location() { return this->_location; }
 
-        static Expected<Config> parser(const std::string &filePath)
+        static Expected<ServerConfig> parser(const std::string &filePath)
         {
             std::vector<std::string> lines = getLinesFromFile(filePath); 
             if (lines.size() < 3)
             {
-                return Expected<Config>::fail("Error: missing lines");
+                return Expected<ServerConfig>::fail("Error: missing lines");
             }
             int pPort = -1;
             std::string pLocation = "";
@@ -168,17 +190,17 @@ class Config
                     std::cout << "Lstn port number: " << lstn.portStr << std::endl;
                     
                     if (!isDigitOnly(lstn.portStr))
-                        return Expected<Config>::fail("Port number non-all digits");
+                        return Expected<ServerConfig>::fail("Port number non-all digits");
                     if (stoi(lstn.portStr) < 0 || stoi(lstn.portStr)> 49152)
-                        return Expected<Config>::fail("Port number is out of range");
+                        return Expected<ServerConfig>::fail("Port number is out of range");
                     pPort = stoi(lstn.portStr);
                     break;
                 }
             }
-            Config cfg;
+            ServerConfig cfg;
             cfg._port = pPort;
             cfg._location = pLocation;
-            return Expected<Config>::success(cfg);
+            return Expected<ServerConfig>::success(cfg);
         }
 };
 
@@ -186,14 +208,14 @@ int main(int argc, char* argv[])
 {
 
 	if (argc != 2) { std::cout << "need valid file as an argument\n"; return 1; }
-    Expected<Config> res = Config::parser(argv[1]);
+    Expected<ServerConfig> res = ServerConfig::parser(argv[1]);
 
     if (!res.hasValue())
     {
 	    std::cerr << "Error parsing conf file:" << res.message() << std::endl;
     }
 
-    Config cfg = res.value();
+    ServerConfig cfg = res.value();
     std::cout << "Port:" << cfg.port() << std::endl;
     std::cout << "Location:" << cfg.location() << std::endl;
 
